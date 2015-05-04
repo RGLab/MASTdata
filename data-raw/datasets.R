@@ -1,11 +1,11 @@
-#'PRISTDataPackage for PRIST paper
+#'MASTDataPackage for PRIST paper
 #'
 #'This package contains data used for PRIST paper.
 #'@docType package
 #'@author Jingyuan Deng, Greg Finak, Andrew McDavid, Masaano Yajima
-#'@name PRISTDataPackage
+#'@name MASTDataPackage
 #'@title Data package for Single Cell RNA sequence paper
-#'@aliases PRISTDataPackage-package
+#'@aliases MASTDataPackage-package
 NULL
 
 sys.source('ProcessAlex.R',envir=topenv())
