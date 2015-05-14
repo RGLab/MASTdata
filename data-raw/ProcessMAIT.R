@@ -38,7 +38,7 @@ NULL
 
 # library
 suppressPackageStartupMessages({
-	require(SingleCellAssay)
+	require(MAST)
 	require(plyr)
 	require(data.table)
 	require(biomaRt)

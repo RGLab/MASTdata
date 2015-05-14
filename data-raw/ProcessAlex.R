@@ -34,10 +34,8 @@ suppressPackageStartupMessages({
 library(org.Mm.eg.db)
 library(GO.db)
 library(plyr)
-library(SingleCellAssay)
+library(MAST)
 library(abind)
-library(arm)
-library(RColorBrewer)
 library(data.table)
 library(biomaRt)
 

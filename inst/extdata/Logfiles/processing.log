@@ -1,0 +1,3 @@
+1  of  1 :  data-raw/datasets.R 
+Error in fread(file.path(data_path, "SCSII_SuppTable3_Final.txt")) : 
+  File is empty: /var/folders/bd/94qsz1xj4zv8hg3fv2nhjhh80000gp/T//RtmpUg4o1P/filec1f65b4af772
