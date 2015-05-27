@@ -9,3 +9,11 @@
 
 # RStudio files
 .Rproj.user/
+.Rproj.user
+
+*cache*
+*.rdb
+*.rdx
+*_files*
+tmp_R_cache*
+unnamed-chunk*

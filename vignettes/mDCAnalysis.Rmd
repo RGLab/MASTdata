@@ -1,5 +1,5 @@
 ---
-title: 'PRIST: A flexible statistical framework for assessing transcriptional changes
+title: 'MAST: A flexible statistical framework for assessing transcriptional changes
   and characterizing heterogeneity in single-cell RNA-seq data. mDC Analysis.'
 author: Greg Finak, Andrew McDavid, Masanao Yajima, Jingyuan Deng, Alex Shalek, Martin
   Prlic, Peter Linsley, Raphael Gottardo
@@ -22,7 +22,6 @@ library(grid)
 library(ggplot2)
 library(reshape2)
 library(org.Hs.eg.db)
-library(SingleCellAssay)
 library(plyr)
 library(glasso)
 library(data.table)
@@ -42,7 +41,7 @@ library(MASTDataPackage)
 })
 data(MASTDataPackage)
 data_dir <- "data"
-if(packageVersion("SingleCellAssay")>="0.924"){
+if(packageVersion("MAST")>="0.930"){
   message("Version Okay")
 }else{
   stop("Wrong SingleCellAssay Version")
@@ -74,7 +73,7 @@ cd <- cData(filtered)
 fd <- fData(filtered)
 
 dt <- data.table(gene_id = fd$symbolid, t(data))
-dt_long <- data.table(melt(dt))
+dt_long <- data.table(data.table:::melt.data.table(dt))
 
 load("../inst/extdata/clusters_shalek.rda")
 CORE_ANTIVIRAL<-as.character(subset(clusters,CLUSTER=="Id")$GENE)
@@ -175,54 +174,79 @@ geneset_index   = ids2indices(geneset_id, fData(filtered_nobaseline)$symbolid)
 
 ```{r gsea,dependson="zlm;filtering_and_modules",cache=FALSE,fig.width=10,fig.height=10}
 #GSEA
-options(mc.cores=7)
-cache(boot_shalek <- bootVcov1(zlmfit=fit,R=100))
-sets<-list()
+options(mc.cores = 7)
+cache(boot_shalek <- bootVcov1(zlmfit = fit,R = 100))
+sets <- list()
 sets[["CORE_ANTIVIRAL"]] <- CORE_ANTIVIRAL
-sets[["CORE_ANTIVIRAL"]] <- which(featureData(filtered_nobaseline)$primerid%in%sets[["CORE_ANTIVIRAL"]])
+sets[["CORE_ANTIVIRAL"]] <-
+which(featureData(filtered_nobaseline)$primerid %in% sets[["CORE_ANTIVIRAL"]])
 sets[["PEAKED_INFLAM"]] <- PEAKED_INFLAM
-sets[["PEAKED_INFLAM"]] <- which(featureData(filtered_nobaseline)$primerid%in%sets[["PEAKED_INFLAM"]])
+sets[["PEAKED_INFLAM"]] <-
+which(featureData(filtered_nobaseline)$primerid %in% sets[["PEAKED_INFLAM"]])
 sets[["SUSTAINED_INFLAM"]] <- SUSTAINED_INFLAM
-sets[["SUSTAINED_INFLAM"]] <- which(featureData(filtered_nobaseline)$primerid%in%sets[["SUSTAINED_INFLAM"]])
+sets[["SUSTAINED_INFLAM"]] <-
+which(featureData(filtered_nobaseline)$primerid %in% sets[["SUSTAINED_INFLAM"]])
 #Load the blood transcriptional modules
 load("../inst/extdata/emory_blood_transcript_modules.rda")
 gene_names <- rownames(coef(fit,"D"))
-for(i in seq_along(emory_blood_transcript_modules)){
-  sets[[names(emory_blood_transcript_modules)[i]]] <- which(gene_names%in%emory_blood_transcript_modules[[i]])
+for (i in seq_along(emory_blood_transcript_modules)) {
+sets[[names(emory_blood_transcript_modules)[i]]] <-
+which(gene_names %in% emory_blood_transcript_modules[[i]])
 }
-sets<-c(sets,geneset_index)
+sets <- c(sets,geneset_index)
 colnames(coef(fit,"D"))
-hyp <- lapply(colnames(coef(fit,"D"))[colnames(coef(fit,"D"))%like%"Time"],function(x)CoefficientHypothesis(x))
-sets<-sets[names(which(unlist(lapply(sets,length))>5))] #at least 5 genes
+hyp <-
+lapply(colnames(coef(fit,"D"))[colnames(coef(fit,"D")) %like% "Time"],function(x)
+CoefficientHypothesis(x))
+sets <-
+sets[names(which(unlist(lapply(sets,length)) > 5))] #at least 5 genes
 
-cache(gsea.time <- lapply(hyp,function(x)gseaAfterBoot(fit,boot_shalek,sets,hypothesis=x,control = list(n_randomize = Inf,var_estimate = "bootall"))))
-summarizeGSEA <- function(gsea){
-  stats <- calcZ(gsea,testType="normal",combined="stouffer")
-  stats2 <- calcZ(gsea,testType="t")
-  stats <- reshape2::melt(stats)
-  stats2<-reshape2::melt(stats2)
-  stats <- setnames(stats,c("module","variable","value"))
-  stats <- dcast(stats,module~variable)
-  stats2<-dcast(stats2,set~comp+metric)
-  setnames(stats2,"set","module")
-  stats<-merge(stats,stats2,by="module")
-  return(stats)
+cache(gsea.time <-
+lapply(hyp,function(x)
+gseaAfterBoot(
+fit,boot_shalek,sets,hypothesis = x,control = list(n_randomize = Inf,var_estimate = "bootall")
+)))
+summarizeGSEA <- function(gsea) {
+stats <- calcZ(gsea,testType = "normal",combined = "stouffer")
+stats2 <- calcZ(gsea,testType = "t")
+stats <- reshape2::melt(stats)
+stats2 <- reshape2::melt(stats2)
+stats <- setnames(stats,c("module","variable","value"))
+stats <- dcast(stats,module ~ variable)
+stats2 <- dcast(stats2,set ~ comp + metric)
+setnames(stats2,"set","module")
+stats <- merge(stats,stats2,by = "module")
+return(stats)
 }
 
 #' Combine into one table
 toplot <- lapply(gsea.time,summarizeGSEA)
-names(toplot)<-colnames(coef(fit,"D"))[colnames(coef(fit,"D"))%like%"Time"]
-toplot<-data.table(ldply(toplot))
+names(toplot) <-
+colnames(coef(fit,"D"))[colnames(coef(fit,"D")) %like% "Time"]
+toplot <- data.table(ldply(toplot))
 setnames(toplot,".id","coefficient")
 
 #GO
-toplot=toplot[module%like%"GO:"|module%in%c("CORE_ANTIVIRAL","PEAKED_INFLAM","SUSTAINED_INFLAM")]
+toplot = toplot[module %like% "GO:" |
+module %in% c("CORE_ANTIVIRAL","PEAKED_INFLAM","SUSTAINED_INFLAM")]
 #BTM
 #toplot=toplot[!module%like%"GO:"&!module%in%c("CORE_ANTIVIRAL","PEAKED_INFLAM","SUSTAINED_INFLAM")]
+toplot[,adjp:= p.adjust(P,"fdr"),.(factor(coefficient %like% "LPS"):factor(coefficient %like%
+"PIC"):factor(coefficient %like% "PAM"))]
+
+#compute effect size filters for each coefficient
+effect.filters = lapply(gsea.time,function(x) {
+  data.table(GOID = rownames(x),effectfilter = abs(x[,"disc","stat","test"] - x[,"disc","stat","null"]) > 1 |
+  abs(x[,"cont","stat","test"] - x[,"cont","stat","null"]) > log2(1.5))
+  })
+names(effect.filters) = colnames(coef(fit,"D"))[colnames(coef(fit,"D")) %like% "Time"]
+effect.filters = data.table(ldply(effect.filters))
+setnames(effect.filters,c("coefficient","GOID","effectfilter"))
 
 #Map go ids to descriptions
 ids <- as.character(unique(toplot[,module]))
-GOID_terms <- select(GO.db,keys = ids,columns = "TERM",keytype = "GOID")
+GOID_terms <-
+select(GO.db,keys = ids,columns = "TERM",keytype = "GOID")
 
 #Merge with gsea results based on GOID
 GOID_terms <- data.table(GOID_terms)
@@ -231,40 +255,57 @@ setnames(toplot,"module","GOID")
 setkey(toplot,GOID)
 toplot <- merge(toplot,GOID_terms)
 
-toplot = toplot[,TERM := ifelse(is.na(TERM),GOID,TERM)]
-toplot = toplot[,Stim := factor(gsub(":.+","",coefficient))]
-toplot = toplot[,adjp := p.adjust(P,"fdr"),]
+toplot = toplot[,TERM:= ifelse(is.na(TERM),GOID,TERM)]
+toplot = toplot[,Stim:= factor(gsub(":.+","",coefficient))]
 toplot = toplot <- na.omit(toplot)
 
-toplot = toplot[,include := any(adjp < 1e-20),list(TERM)]
+#Merge with effect filter
+toplot = merge(toplot,effect.filters,by=c("GOID","coefficient"))
+
+#Compute an adjusted p-value for each Stimulation across all timepoints.
+#toplot = toplot[,adjp := p.adjust(P,"fdr"),.(Stim)]
+#include if fdr and threshold passed at any time
+toplot[,include_sub := adjp<0.01&effectfilter,.(coefficient)]
+toplot[,include := any(include_sub),.(Stim,TERM)]
+#BTM
+#toplot <- toplot[!TERM %like% "TBA"&!GOID%like%"GO"&!GOID%in%c("SUSTAINED_INFLAM","PEAKED_INFLAM","CORE_ANTIVIRAL")]
 toplot <- toplot[!TERM %like% "TBA"]
-o <- order(toplot[include == TRUE,sum((Z))/sqrt(length(Z)),TERM]$V1)
-levs <- toplot[include == TRUE,TERM,TERM]$TERM
 toplot = toplot[,coefficient := factor(toplot$coefficient)]
-MELTED <- data.table(melt(toplot[coefficient  %like% "LPS" & include == TRUE],id = c("TERM","GOID","include","coefficient","Stim")))
+MELTED <-
+data.table(melt(toplot[coefficient  %like% "LPS" &
+include == TRUE],id = c(
+"TERM","GOID","include","coefficient","Stim","effectfilter"
+)))
 library(stringr)
 MELTED <- MELTED[!variable %like% "adj"]
 MELTED[,"component" := (str_split_fixed(variable,"_",2))[,1]]
 MELTED[,component := ifelse(component == "Z","combined",component)]
-
+levs <-
+MELTED[variable %like% "Z" &
+component %in% "combined"][order(-abs(value))][,unique(TERM)][1:50]
 shalek_gsea_heatmap <-
-  ggplot(MELTED[variable %like% "Z"]) + aes(x = coefficient,y = TERM,fill =
-  sign(value) * pmin(15,abs(value))) + facet_wrap( ~component,nrow = 1) +
-  geom_raster() + theme_linedraw() + theme(
-  legend.position = "right",axis.text.x = element_text(angle = 90,hjust =
-  1),axis.text.y = element_text(size = 7)
-  ) + scale_fill_gradient2(
-  "GSEA Z-score",low = ("#E9A3C9"),mid = ("#F7F7F7"),high = ("#A1D76A"),space =
-  "Lab",limits = c(-15,15)
-  ) + scale_y_discrete("Module Name",limits = levs[o],labels = gsub(".\\(.+","",levs[o])) +
-  scale_x_discrete("Stimulation and Timepoint",labels = c("Time 2h","Time 4h", "Time 6h"))
-  
+ggplot(MELTED[variable %like% "Z" &
+GOID %in% (MELTED[variable %like% "Z" &
+component %in% "combined"][order(-abs(value))][,unique(GOID)][1:50])]) + aes(x = coefficient,y = TERM,fill =
+sign(value) * pmin(15,abs(value))) + facet_wrap(~ component,nrow = 1) +
+geom_raster() + theme_linedraw() + theme(
+legend.position = "right",axis.text.x = element_text(angle = 90,hjust =
+1),axis.text.y = element_text(size = 7)
+) + scale_fill_gradient2(
+"GSEA Z-score",low = ("#E9A3C9"),mid = ("#F7F7F7"),high = ("#A1D76A"),space =
+"Lab",limits = c(-20,20)
+) + scale_y_discrete("Module Name",limits = rev(levs),labels = rev(levs)) +
+scale_x_discrete("Stimulation and Timepoint",labels = c("Time 2h","Time 4h", "Time 6h"))
+
 ##Run when using BTM modules
-#png(file="../inst/extdata/output/SupplementaryFigure_Shalek_BTM_GSEA.png",width = 150*10,height=150*6,res=150)
+#pdf(file="../inst/extdata/output/SupplementaryFigure_Shalek_BTM_GSEA.pdf",width = 10,height=6)
 #shalek_gsea_heatmap
 #dev.off()
 
 saveRDS(sets,file = "../inst/extdata/Shalek_Modules.rds")
+sets_symbols = lapply(sets,function(s)
+pData(featureData(filtered_nobaseline))[s,"symbolid"])
+saveRDS(sets_symbols,file = "../inst/extdata/Shalek_Modules_symbol.rds")
 ```
 
 
@@ -281,7 +322,7 @@ colnames(residuals) <- rownames(filtered_nobaseline)
 # compute the scores over each significant module.
 #For each module, grab the genes, and compute the sum per stim:time
 len <- length(levs)
-setinclude <- levs[o][c((len - 8):len)]
+setinclude <- levs[c((len - 8):len)]
 setmap <- unique(toplot[TERM %in% setinclude,list(.id = TERM,GOID)])
 foo <-
   llply(setmap[,GOID],function(x)
@@ -385,7 +426,7 @@ scores <- do.call(rbind,fit.scores@hookOut)
 nms <- names(fit.scores@hookOut)
 rownames(scores) <- nms
 len <- length(levs)
-setinclude <- levs[o][c((len - 8):len)]
+setinclude <- levs[c((len - 8):len)]
 setmap <- unique(toplot[TERM %in% setinclude,list(.id = TERM,GOID)])
 foo <-
   llply(setmap[,GOID],function(x)
