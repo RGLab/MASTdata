@@ -1,6 +1,6 @@
 # History files
 .Rhistory
-
+*.Rproj
 # Example code in package build process
 *-Ex.R
 
@@ -17,3 +17,5 @@
 *_files*
 tmp_R_cache*
 unnamed-chunk*
+vignettes/*.md
+vignettes/figure

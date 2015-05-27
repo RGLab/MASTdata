@@ -1,0 +1,914 @@
+## ----load,echo=FALSE-----------------------------------------------------
+rm(list=ls())
+suppressPackageStartupMessages({
+  
+library(GGally)
+library(grid)
+library(ggplot2)
+library(reshape2)
+library(org.Hs.eg.db)
+library(plyr)
+library(glasso)
+library(data.table)
+library(GO.db)
+library(hom.Hs.inp.db)
+library(MAST)
+library(Matrix)
+library(igraph)
+library(ggplot2)
+library(RColorBrewer)
+library(org.Mm.eg.db)
+library(GSEABase)
+library(corpcor)
+library(Rtsne)
+library(MASTDataPackage)
+
+})
+data(MASTDataPackage)
+data_dir <- "data"
+if(packageVersion("MAST")>="0.930"){
+  message("Version Okay")
+}else{
+  stop("Wrong SingleCellAssay Version")
+}
+FCTHRESHOLD<-log2(1.5)
+plotheme<-theme(plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line=element_line(colour="black"))
+knitr::opts_chunk$set(list(echo=FALSE,eval=TRUE,message=FALSE,error=FALSE,warning=FALSE,fig.width=10,fig.height=8,dev=c("png")))
+
+## ----filtering_and_modules, cache=FALSE,echo=FALSE-----------------------
+filtered<-sca_alex
+percent_expressed<-0.1
+thres<-"adapt"
+tt <- thresholdSCRNACountMatrix(2^exprs(filtered) - 1, nbins = 20, min_per_bin = 30)
+
+if (thres == "adapt") {
+    exprs(filtered) <- tt$counts_threshold
+} else if (thres == "fixed") {
+    mat <- exprs(filtered)
+    mat[mat < 1/log(2)] <- 0
+    exprs(filtered) <- mat
+}
+
+expressed_genes <- colMeans(exprs(filtered) > 0) > percent_expressed
+filtered <- filtered[, expressed_genes]
+data <- exprs(filtered)
+cd <- cData(filtered)
+fd <- fData(filtered)
+
+dt <- data.table(gene_id = fd$symbolid, t(data))
+dt_long <- data.table(data.table:::melt.data.table(dt))
+
+load("../inst/extdata/clusters_shalek.rda")
+CORE_ANTIVIRAL<-as.character(subset(clusters,CLUSTER=="Id")$GENE)
+PEAKED_INFLAM<-as.character(subset(clusters,CLUSTER=="IIIc")$GENE)
+SUSTAINED_INFLAM<-as.character(subset(clusters,CLUSTER=="IIId")$GENE)
+
+ids=featureData(filtered)$primerid
+ids.idx <- 1:length(ids)
+
+#get all the GO IDS for all the genes
+sym2go<-AnnotationDbi:::select(org.Mm.eg.db,keys=gsub("^(.)","\\U\\1",tolower(ids),perl=TRUE),columns="GOALL",keytype="SYMBOL")
+sym2go <- na.omit(sym2go)
+sym2go <- data.table(sym2go)
+ids <- data.table(cbind(ids,ids.idx))
+setkey(ids,ids)
+sym2go=sym2go[,ids:=SYMBOL]
+setkey(sym2go,ids)
+sym2go <- merge(ids,sym2go)
+#module_member is the gene index for the given module
+BP <- sym2go[ONTOLOGYALL%in%"BP"]
+BP <- BP[,module_member:=ids.idx,list(GOALL)]
+
+## ----zlm,dependson="filtering_and_modules", cache=FALSE------------------
+cData(filtered)$Stim <- factor(cData(filtered)$Stim,levels=c("Unstimulated","LPS","PAM","PIC"))
+cData(filtered)$Time <- factor(cData(filtered)$Time)
+filtered_nobaseline <- subset(filtered,!Stim%in%c("Unstimulated")) #drop Time 0
+cData(filtered_nobaseline)$Stim <- factor(cData(filtered_nobaseline)$Stim)
+cData(filtered_nobaseline)$Time <- factor(cData(filtered_nobaseline)$Time)
+options(mc.cores=8)
+fit.bystim <- zlm.SingleCellAssay(~cngeneson+Stim/Time,sca=filtered_nobaseline,method="ridge",ebayes=TRUE,hook=deviance_residuals_hook,lambda=0.1)
+fit<-fit.bystim
+
+## ----no_ngeneson, cache=FALSE, dependson="filtering_and_modules"---------
+options(mc.cores=7)
+#Fit a model without ngeneson for comparison
+fit.bystim.nongeneson <- zlm.SingleCellAssay(~Stim/Time,sca=filtered_nobaseline,method="ridge",ebayes=TRUE,hook=deviance_residuals_hook,lambda=0.1)
+
+## ----any_time_effect,dependson="zlm", cache=FALSE------------------------
+#Test for any time effect
+M <- matrix(0,nrow=ncol(coef(fit,"D")))
+rownames(M) <- colnames(coef(fit,"D"))
+M[colnames(coef(fit,"D"))%like%"LPS",] <- 1
+M.time <- M
+M.time['(Intercept)',]<- 0
+anyTime <- lrTest(fit, hypothesis=M.time)
+anyTime.sorted <- na.omit(anyTime[order(anyTime[,'hurdle','Pr(>Chisq)']),'hurdle',])
+lfc.anytime<-getLogFC(fit)[contrast%like%"Time"]
+res_gene_hurdle<-data.table(dcast(melt(anyTime.sorted),primerid~metric))
+res_gene_hurdle=res_gene_hurdle[,adj:=p.adjust(`Pr(>Chisq)`,"fdr")]
+
+#test with no ngeneson
+nong.test<-lrTest(fit.bystim.nongeneson, hypothesis=M.time[-2,,drop=FALSE])
+nong.test <- na.omit(nong.test[order(nong.test[,'hurdle','Pr(>Chisq)']),'hurdle',])
+nong.test<-data.table(dcast(melt(nong.test),primerid~metric))
+nong.test=nong.test[,adj:=p.adjust(`Pr(>Chisq)`,"fdr")]
+
+
+tg<-merge(lfc.anytime[contrast%like%"LPS"&contrast%like%"Time6h"],res_gene_hurdle,by="primerid")[order((logFC),adj)][1:100,primerid]
+COMPASS::pheatmap(exprs(filtered_nobaseline[cData(filtered_nobaseline)$Time%in%c("1h","6h")&cData(filtered_nobaseline)$Stim%in%"LPS",as.character(tg)]))
+
+## ----any_stim_effect,dependson="zlm",eval=FALSE,echo=FALSE---------------
+#  ### Test for any stimulation effect
+#  #Test for any Stim effect
+#  M <- matrix(0,nrow=ncol(coef(fit,"D")))
+#  rownames(M) <- colnames(coef(fit,"D"))
+#  M[colnames(coef(fit,"D"))%like%"Stim",] <- 1
+#  M.stim <- M
+#  anyStim <- lrTest(fit, hypothesis=M.stim)
+#  anyStim.sorted <- na.omit(anyStim[order(anyStim[,'hurdle','Pr(>Chisq)']),'hurdle',])
+
+## ----mouse_go------------------------------------------------------------
+library(data.table)
+library(limma)
+library(GO.db)
+gene_association= fread("../inst/extdata/gene_association.mgi",skip=6)
+geneset_id      = split(toupper(gene_association$V3), gene_association$V5)
+geneset_terms   = Term(GOTERM)[names(geneset_id)]
+geneset_index   = ids2indices(geneset_id, fData(filtered_nobaseline)$symbolid)
+
+## ----gsea,dependson="zlm;filtering_and_modules",cache=FALSE,fig.width=10,fig.height=10----
+#GSEA
+options(mc.cores = 7)
+cache(boot_shalek <- bootVcov1(zlmfit = fit,R = 100))
+sets <- list()
+sets[["CORE_ANTIVIRAL"]] <- CORE_ANTIVIRAL
+sets[["CORE_ANTIVIRAL"]] <-
+which(featureData(filtered_nobaseline)$primerid %in% sets[["CORE_ANTIVIRAL"]])
+sets[["PEAKED_INFLAM"]] <- PEAKED_INFLAM
+sets[["PEAKED_INFLAM"]] <-
+which(featureData(filtered_nobaseline)$primerid %in% sets[["PEAKED_INFLAM"]])
+sets[["SUSTAINED_INFLAM"]] <- SUSTAINED_INFLAM
+sets[["SUSTAINED_INFLAM"]] <-
+which(featureData(filtered_nobaseline)$primerid %in% sets[["SUSTAINED_INFLAM"]])
+#Load the blood transcriptional modules
+load("../inst/extdata/emory_blood_transcript_modules.rda")
+gene_names <- rownames(coef(fit,"D"))
+for (i in seq_along(emory_blood_transcript_modules)) {
+sets[[names(emory_blood_transcript_modules)[i]]] <-
+which(gene_names %in% emory_blood_transcript_modules[[i]])
+}
+sets <- c(sets,geneset_index)
+colnames(coef(fit,"D"))
+hyp <-
+lapply(colnames(coef(fit,"D"))[colnames(coef(fit,"D")) %like% "Time"],function(x)
+CoefficientHypothesis(x))
+sets <-
+sets[names(which(unlist(lapply(sets,length)) > 5))] #at least 5 genes
+
+cache(gsea.time <-
+lapply(hyp,function(x)
+gseaAfterBoot(
+fit,boot_shalek,sets,hypothesis = x,control = list(n_randomize = Inf,var_estimate = "bootall")
+)))
+summarizeGSEA <- function(gsea) {
+stats <- calcZ(gsea,testType = "normal",combined = "stouffer")
+stats2 <- calcZ(gsea,testType = "t")
+stats <- reshape2::melt(stats)
+stats2 <- reshape2::melt(stats2)
+stats <- setnames(stats,c("module","variable","value"))
+stats <- dcast(stats,module ~ variable)
+stats2 <- dcast(stats2,set ~ comp + metric)
+setnames(stats2,"set","module")
+stats <- merge(stats,stats2,by = "module")
+return(stats)
+}
+
+#' Combine into one table
+toplot <- lapply(gsea.time,summarizeGSEA)
+names(toplot) <-
+colnames(coef(fit,"D"))[colnames(coef(fit,"D")) %like% "Time"]
+toplot <- data.table(ldply(toplot))
+setnames(toplot,".id","coefficient")
+
+#GO
+toplot = toplot[module %like% "GO:" |
+module %in% c("CORE_ANTIVIRAL","PEAKED_INFLAM","SUSTAINED_INFLAM")]
+#BTM
+#toplot=toplot[!module%like%"GO:"&!module%in%c("CORE_ANTIVIRAL","PEAKED_INFLAM","SUSTAINED_INFLAM")]
+toplot[,adjp:= p.adjust(P,"fdr"),.(factor(coefficient %like% "LPS"):factor(coefficient %like%
+"PIC"):factor(coefficient %like% "PAM"))]
+
+#compute effect size filters for each coefficient
+effect.filters = lapply(gsea.time,function(x) {
+  data.table(GOID = rownames(x),effectfilter = abs(x[,"disc","stat","test"] - x[,"disc","stat","null"]) > 1 |
+  abs(x[,"cont","stat","test"] - x[,"cont","stat","null"]) > log2(1.5))
+  })
+names(effect.filters) = colnames(coef(fit,"D"))[colnames(coef(fit,"D")) %like% "Time"]
+effect.filters = data.table(ldply(effect.filters))
+setnames(effect.filters,c("coefficient","GOID","effectfilter"))
+
+#Map go ids to descriptions
+ids <- as.character(unique(toplot[,module]))
+GOID_terms <-
+select(GO.db,keys = ids,columns = "TERM",keytype = "GOID")
+
+#Merge with gsea results based on GOID
+GOID_terms <- data.table(GOID_terms)
+setkey(GOID_terms,GOID)
+setnames(toplot,"module","GOID")
+setkey(toplot,GOID)
+toplot <- merge(toplot,GOID_terms)
+
+toplot = toplot[,TERM:= ifelse(is.na(TERM),GOID,TERM)]
+toplot = toplot[,Stim:= factor(gsub(":.+","",coefficient))]
+toplot = toplot <- na.omit(toplot)
+
+#Merge with effect filter
+toplot = merge(toplot,effect.filters,by=c("GOID","coefficient"))
+
+#Compute an adjusted p-value for each Stimulation across all timepoints.
+#toplot = toplot[,adjp := p.adjust(P,"fdr"),.(Stim)]
+#include if fdr and threshold passed at any time
+toplot[,include_sub := adjp<0.01&effectfilter,.(coefficient)]
+toplot[,include := any(include_sub),.(Stim,TERM)]
+#BTM
+#toplot <- toplot[!TERM %like% "TBA"&!GOID%like%"GO"&!GOID%in%c("SUSTAINED_INFLAM","PEAKED_INFLAM","CORE_ANTIVIRAL")]
+toplot <- toplot[!TERM %like% "TBA"]
+toplot = toplot[,coefficient := factor(toplot$coefficient)]
+MELTED <-
+data.table(melt(toplot[coefficient  %like% "LPS" &
+include == TRUE],id = c(
+"TERM","GOID","include","coefficient","Stim","effectfilter"
+)))
+library(stringr)
+MELTED <- MELTED[!variable %like% "adj"]
+MELTED[,"component" := (str_split_fixed(variable,"_",2))[,1]]
+MELTED[,component := ifelse(component == "Z","combined",component)]
+levs <-
+MELTED[variable %like% "Z" &
+component %in% "combined"][order(-abs(value))][,unique(TERM)][1:50]
+shalek_gsea_heatmap <-
+ggplot(MELTED[variable %like% "Z" &
+GOID %in% (MELTED[variable %like% "Z" &
+component %in% "combined"][order(-abs(value))][,unique(GOID)][1:50])]) + aes(x = coefficient,y = TERM,fill =
+sign(value) * pmin(15,abs(value))) + facet_wrap(~ component,nrow = 1) +
+geom_raster() + theme_linedraw() + theme(
+legend.position = "right",axis.text.x = element_text(angle = 90,hjust =
+1),axis.text.y = element_text(size = 7)
+) + scale_fill_gradient2(
+"GSEA Z-score",low = ("#E9A3C9"),mid = ("#F7F7F7"),high = ("#A1D76A"),space =
+"Lab",limits = c(-20,20)
+) + scale_y_discrete("Module Name",limits = rev(levs),labels = rev(levs)) +
+scale_x_discrete("Stimulation and Timepoint",labels = c("Time 2h","Time 4h", "Time 6h"))
+
+##Run when using BTM modules
+#pdf(file="../inst/extdata/output/SupplementaryFigure_Shalek_BTM_GSEA.pdf",width = 10,height=6)
+#shalek_gsea_heatmap
+#dev.off()
+
+saveRDS(sets,file = "../inst/extdata/Shalek_Modules.rds")
+sets_symbols = lapply(sets,function(s)
+pData(featureData(filtered_nobaseline))[s,"symbolid"])
+saveRDS(sets_symbols,file = "../inst/extdata/Shalek_Modules_symbol.rds")
+
+## ----residuals, cache=FALSE, warning=FALSE,message=FALSE, dependson = "filtering_and_modules;zlm;gsea"----
+#Get the residuals
+residuals <- ldply(fit@hookOut)
+nms <- residuals[,1]
+rownames(residuals) <- nms
+residuals <- residuals[,-1L]
+colnames(residuals) <- rownames(filtered_nobaseline)
+
+# compute the scores over each significant module.
+#For each module, grab the genes, and compute the sum per stim:time
+len <- length(levs)
+setinclude <- levs[c((len - 8):len)]
+setmap <- unique(toplot[TERM %in% setinclude,list(.id = TERM,GOID)])
+foo <-
+  llply(setmap[,GOID],function(x)
+    data.frame(score = colMeans(na.omit(residuals[featureData(filtered_nobaseline)@data[sets[[x]],"primerid"],])),cData(filtered_nobaseline)))
+names(foo) <- setmap[,.id]
+foo <- ldply(foo)
+foo$.id <-
+  sapply(gsub(".\\(.+$","",foo$.id),function(x)
+    Kmisc::wrap(x,25))
+ggplot(foo) + aes(y = score,x = Time,fill = Stim) + facet_grid(Stim ~ .id,scales =
+                                                                 "free_y") + geom_violin() + geom_jitter() + theme_bw() + scale_fill_brewer(type =
+                                                                                                                                              "div",palette = 2,guide = FALSE) + theme_linedraw() + theme(strip.text.y =
+                                                                                                                                                                                                            element_text(size = 7),strip.text.x = element_text(size = 7)) + geom_hline(aes(y =
+                                                                                                                                                                                                                                                                                             0),lty = 2) + geom_smooth(aes(group = 1),method = "loess")
+setDT(foo)
+
+## ------------------------------------------------------------------------
+PCbiplot <-
+  function(PC, x = "PC1", y = "PC2", colors = c('black', 'black', 'red', 'red'), arrow_colors =
+             "red", point_colors = "black", arrow_alpha = 0.75, meta = NULL, gene_subset =
+             NULL, scale = 0.7) {
+    # PC being a prcomp object
+    data <- data.frame(obsnames = row.names(PC$x), PC$x,meta)
+    plot <-
+      ggplot(data, aes_string(x = x, y = y, color = point_colors)) + geom_point(
+        alpha = .8, size = 3, aes(label = obsnames),show_guide = FALSE
+      )
+    plot <-
+      plot + geom_hline(aes(0), size = .2) + geom_vline(aes(0), size = .2, color =
+                                                          colors[2])
+    datapc <-
+      data.frame(varnames = rownames(PC$rotation), PC$rotation)
+    mult <- min((max(data[,y]) - min(data[,y]) / (max(datapc[,y]) - min(datapc[,y]))),
+                (max(data[,x]) - min(data[,x]) / (max(datapc[,x]) - min(datapc[,x]))))
+    datapc <- transform(datapc,
+                        v1 = scale * mult * (get(x)),
+                        v2 = scale * mult * (get(y)))
+    plot <-
+      plot + coord_equal() + geom_text(
+        data = datapc[gene_subset,], aes(x = v1, y = v2, label = varnames), size = 4, vjust =  1, color = arrow_colors,alpha = arrow_alpha
+      )
+    plot <-
+      plot + geom_segment(
+        data = datapc[gene_subset,], aes(
+          x = 0, y = 0, xend = v1, yend = v2
+        ), arrow = arrow(length = unit(0.2,"cm")), alpha = arrow_alpha, color =
+          arrow_colors
+      )
+    plot
+  }
+
+
+
+PCbiplot(
+  x = "PC1",y = "PC2",PC = prcomp(t(na.omit(residuals[featureData(filtered_nobaseline)@data[sets[["CORE_ANTIVIRAL"]],"primerid"],colnames(residuals) %like%
+                                                        "LPS"]))),meta = cData(subset(filtered_nobaseline,Stim %in% "LPS")),point_colors = "Time",gene_subset = c(52,62,65,85,18,19)
+) + facet_wrap( ~Time) + theme_linedraw() + plotheme
+ggsave(
+  "../inst/extdata/output/Supplement_Figure_LPS_CORE_ANTIVIRAL_RESIDUALS_PCA.pdf"
+)
+ggsave(
+  "../inst/extdata/output/Supplement_Figure_LPS_CORE_ANTIVIRAL_RESIDUALS_PCA.png"
+)
+ggsave(
+  "../inst/extdata/output/Supplement_Figure_LPS_CORE_ANTIVIRAL_RESIDUALS_PCA.png"
+)
+
+## ---- dependson="zlm;filtering_and_modules;gsea",cache=FALSE,warning=FALSE,message=FALSE----
+options(mc.cores = 7)
+
+score_4_hook <- function(x) {
+  if (all(x@fitted)) {
+    class(x@fitC) <- c("glm","lm")
+    class(x@fitD) <- c("bayesglm","glm","lm")
+    wh <- !colnames(x@modelMatrix) %like% "cngeneson"
+    wh2 <- !names(coef(x@fitC)) %like% "cngeneson"
+    fc <-
+      x@modelMatrix[,!wh,drop = FALSE] %*% coef(x@fitC)[!wh2,drop = FALSE] #continuous CDR effect
+    fd <-
+      arm::invlogit(x@modelMatrix[,c("(Intercept)","cngeneson"),drop = FALSE] %*%
+                      coef(x@fitD)[c("(Intercept)","cngeneson"),drop = FALSE]) #discrete CDR effect
+    R <-
+      matrix((x@response - fc * fd),nrow = 1) #residuals corrected for ngeneson in the continuous part
+    colnames(R) <- names(residuals(x@fitD))
+    R[x@response == 0] <- 0 - fd
+    R
+  }
+}
+fit.scores <-
+  zlm.SingleCellAssay(
+    ~ cngeneson + Stim / Time,sca = filtered_nobaseline,method = "ridge",ebayes =
+      TRUE,hook = score_4_hook,lambda = 0.1
+  )
+scores <- do.call(rbind,fit.scores@hookOut)
+
+nms <- names(fit.scores@hookOut)
+rownames(scores) <- nms
+len <- length(levs)
+setinclude <- levs[c((len - 8):len)]
+setmap <- unique(toplot[TERM %in% setinclude,list(.id = TERM,GOID)])
+foo <-
+  llply(setmap[,GOID],function(x)
+    data.frame(score = colMeans(na.omit(scores[featureData(filtered_nobaseline)@data[sets[[x]],"primerid"],])),cData(filtered_nobaseline)))
+
+names(foo) <- setmap[,.id]
+foo <- ldply(foo)
+foo$.id <-
+  sapply(gsub(".\\(.+$","",foo$.id),function(x)
+    Kmisc::wrap(x,25))
+colnames(foo)[2] <- "score"
+shalek_gsea_scores <-
+  ggplot(data.table(foo)[Stim %in% "LPS"]) + aes(y = score,x = Time,fill =
+                                                   Time) + facet_wrap( ~.id,scales = "free_y") + geom_violin() + geom_jitter(alpha =
+                                                                                                                               0.4) + theme_bw() + scale_fill_brewer(type = "seq",palette = 1,guide = FALSE) +
+  theme_linedraw() + theme(
+    plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
+      element_line(colour = "black"),legend.position = "bottom",strip.text.y =
+      element_text(size = 7),strip.text.x = element_text(size = 7)
+  ) + geom_hline(aes(y = 0),lty = 2) + geom_smooth(aes(group = 1),method =
+                                                     "loess")
+
+## ----figure4-------------------------------------------------------------
+pdf("../inst/extdata/output/Figure5.pdf",width = 15,height = 10)
+grid.newpage()
+layout <- matrix(rep(c(1,2),each = 100),ncol = 20)
+layout[10,1:10] <- 3
+pushViewport(viewport(layout = grid.layout(
+  nrow = nrow(layout),ncol = ncol(layout)
+)))
+inds = which(layout == 1,T)
+vp <- viewport(layout.pos.row = inds[,1],layout.pos.col = inds[,2])
+print(shalek_gsea_scores,vp = vp)
+inds = which(layout == 2,T)
+vp <- viewport(layout.pos.row = inds[,1],layout.pos.col = inds[,2])
+print(shalek_gsea_heatmap,vp = vp)
+grid.text("A",x = 0.01,y = 0.95)
+grid.text("B",x = 0.52,y = 0.95)
+dev.off()
+
+## ----fig.width=15,fig.height=10------------------------------------------
+grid.newpage()
+layout <- matrix(rep(c(1,2),each = 100),ncol = 20)
+layout[10,1:10] <- 3
+pushViewport(viewport(layout = grid.layout(
+  nrow = nrow(layout),ncol = ncol(layout)
+)))
+inds = which(layout == 1,T)
+vp <- viewport(layout.pos.row = inds[,1],layout.pos.col = inds[,2])
+print(shalek_gsea_scores,vp = vp)
+inds = which(layout == 2,T)
+vp <- viewport(layout.pos.row = inds[,1],layout.pos.col = inds[,2])
+print(shalek_gsea_heatmap,vp = vp)
+grid.text("A",x = 0.01,y = 0.95)
+grid.text("B",x = 0.52,y = 0.95)
+
+## ----figure4_png---------------------------------------------------------
+png(
+  "../inst/extdata/output/Figure5.png",width = 300 * 15,height = 300 * 8,res =
+    300
+)
+grid.newpage()
+layout <- matrix(rep(c(1,2),each = 100),ncol = 20)
+layout[10,1:10] <- 3
+pushViewport(viewport(layout = grid.layout(
+  nrow = nrow(layout),ncol = ncol(layout)
+)))
+inds = which(layout == 1,T)
+vp <- viewport(layout.pos.row = inds[,1],layout.pos.col = inds[,2])
+print(shalek_gsea_scores,vp = vp)
+inds = which(layout == 2,T)
+vp <- viewport(layout.pos.row = inds[,1],layout.pos.col = inds[,2])
+print(shalek_gsea_heatmap,vp = vp)
+grid.text("A",x = 0.01,y = 0.95)
+grid.text("B",x = 0.52,y = 0.95)
+dev.off()
+
+## ----residual_correlation,dependson="zlm;filtering_and_modules;any_time_effect",cache=FALSE----
+setkey(lfc.anytime,primerid)
+setkey(res_gene_hurdle,primerid)
+genes_to_plot <-
+  unique(merge(res_gene_hurdle,lfc.anytime)[adj < 0.01 &
+                                              abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:1000,primerid])[1:20]
+
+
+o <-
+  hclust(as.dist(1 - cor.shrink(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Stim"] %like%
+                                              "LPS" & cData(filtered_nobaseline)[,"Time"] %in% c("6h")]))))$order
+
+
+
+mkDT <- function(x,time) {
+  foo <- melt(x)
+  setnames(foo,c("x","y","rho"))
+  foo <- data.frame(foo,time = time)
+  foo
+}
+stim_sel <- "LPS"
+
+levs <-
+  colnames(cor.shrink(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Stim"] %like%
+                                    stim_sel & cData(filtered_nobaseline)[,"Time"] %in% c("1h")]))[o,o])
+
+colors <- brewer.pal(name = "PiYG",n = 11)
+toplot <-
+  rbind(
+    mkDT(cor.shrink(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Stim"] %like%
+                                  stim_sel &
+                                  cData(filtered_nobaseline)[,"Time"] %in% c("1h")]))[o,o],"1h"),
+    mkDT(cor.shrink(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Stim"] %like%
+                                  stim_sel &
+                                  cData(filtered_nobaseline)[,"Time"] %in% c("2h")]))[o,o],"2h"),
+    mkDT(cor.shrink(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Stim"] %like%
+                                  stim_sel &
+                                  cData(filtered_nobaseline)[,"Time"] %in% c("4h")]))[o,o],"4h"),
+    mkDT(cor.shrink(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Stim"] %like%
+                                  stim_sel &
+                                  cData(filtered_nobaseline)[,"Time"] %in% c("6h")]))[o,o],"6h")
+  )
+
+shalek_resid_cor_lps <-
+  ggplot(toplot) + aes(x = x,y = y,fill = rho) + facet_wrap( ~time,nrow =
+                                                               1) + geom_tile() + scale_x_discrete("",limits = levs) + scale_y_discrete("",limits =
+                                                                                                                                          levs) + scale_fill_gradient2(
+                                                                                                                                            limits = c(-1,1),low = colors[1],high = colors[11],mid = colors[6],space =
+                                                                                                                                              "Lab"
+                                                                                                                                          ) + theme_linedraw() + theme(
+                                                                                                                                            axis.text.x = element_text(
+                                                                                                                                              angle = 90,hjust = 1,size = 7
+                                                                                                                                            ),axis.text.y = element_text(size = 7),legend.position = "right",plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
+                                                                                                                                              element_line(colour = "black")
+                                                                                                                                          )
+
+## ------------------------------------------------------------------------
+library(psych)
+de_genes_ng <-
+  unique(merge(res_gene_hurdle,lfc.anytime)[adj < 0.01 &
+                                              abs(logFC) > 0,][order(-abs(logFC),adj)][,primerid])
+                                              de_genes_nong <- unique(nong.test[adj < 0.01][order(adj)][,primerid])
+                                              
+                                              residuals_nong <- ldply(fit.bystim.nongeneson@hookOut)
+                                              nms <- residuals_nong[,1]
+                                              rownames(residuals_nong) <- nms
+                                              residuals_nong <- residuals_nong[,-1L]
+                                              colnames(residuals_nong) <- rownames(filtered_nobaseline)
+                                              
+                                              mkDT <- function(x,n = NULL) {
+                                              foo <- x[upper.tri(x,diag = FALSE)]
+                                              g1 <- rownames(x)[which(upper.tri(x,diag = FALSE),T)[,1]]
+                                              g2 <- colnames(x)[which(upper.tri(x,diag = FALSE),T)[,2]]
+                                              data.table(g1,g2,p.adjust(r.test(foo,n = n)$p,"fdr"))
+                                              }
+                                              
+                                              
+                                              length(unique(melt(as.matrix(mkDT((cor(t(residuals[de_genes_ng,cData(filtered_nobaseline)[,"Stim"] %like%
+                                              stim_sel &
+                                              cData(filtered_nobaseline)[,"Time"] %in% c("6h")])))[1:length(de_genes_ng),1:length(de_genes_ng)],58
+                                              )[V3 < 0.01,list(g1,g2)]))[,"value"]))
+                                              length(unique(melt(as.matrix(mkDT(
+                                              cor(t(residuals_nong[de_genes_nong,cData(filtered_nobaseline)[,"Stim"] %like%
+                                              stim_sel &
+                                              cData(filtered_nobaseline)[,"Time"] %in% c("6h")]))[1:length(de_genes_nong),1:length(de_genes_nong)],58
+                                              )[V3 < 0.01,list(g1,g2)]))[,"value"]))
+                                              
+                                              length(unique(melt(as.matrix(mkDT((cor(t(residuals[de_genes_ng,cData(filtered_nobaseline)[,"Stim"] %like%
+                                              stim_sel &
+                                              cData(filtered_nobaseline)[,"Time"] %in% c("1h")])))[1:length(de_genes_ng),1:length(de_genes_ng)],75
+                                              )[V3 < 0.01,list(g1,g2)]))[,"value"]))
+                                              length(unique(melt(as.matrix(mkDT(
+                                              cor(t(residuals_nong[de_genes_nong,cData(filtered_nobaseline)[,"Stim"] %like%
+                                              stim_sel &
+                                              cData(filtered_nobaseline)[,"Time"] %in% c("1h")]))[1:length(de_genes_nong),1:length(de_genes_nong)],75
+                                              )[V3 < 0.01,list(g1,g2)]))[,"value"]))
+                                              
+
+## ----pca_residuals,cache=FALSE,dependson="any_time_effect;zlm;filtering_and_modules"----
+                                              PCbiplot <-
+                                                function(PC, x = "PC1", y = "PC2", colors = c('black', 'black', 'red', 'red'),arrow_colors =
+                                                "red",point_colors = "black",arrow_alpha = 0.75,meta = NULL,gene_subset =
+                                                NULL,scale = 0.7) {
+                                                # PC being a prcomp object
+                                                data <- data.frame(obsnames = row.names(PC$x), PC$x,meta)
+                                                plot <-
+                                                ggplot(data, aes_string(x = x, y = y, color = point_colors)) + geom_point(
+                                                alpha = .8, size = 3, aes(label = obsnames),show_guide = FALSE
+                                                )
+                                                plot <-
+                                                plot + geom_hline(aes(0), size = .2) + geom_vline(aes(0), size = .2, color =
+                                                colors[2])
+                                                datapc <-
+                                                data.frame(varnames = rownames(PC$rotation), PC$rotation)
+                                                mult <- min((max(data[,y]) - min(data[,y]) / (max(datapc[,y]) - min(datapc[,y]))),
+                                                (max(data[,x]) - min(data[,x]) / (max(datapc[,x]) - min(datapc[,x]))))
+                                                datapc <- transform(datapc,
+                                                v1 = scale * mult * (get(x)),
+                                                v2 = scale * mult * (get(y)))
+                                                plot <-
+                                                plot + coord_equal() + geom_text(
+                                                data = datapc[gene_subset,], aes(x = v1, y = v2, label = varnames), size = 4, vjust =
+                                                1, color = arrow_colors,alpha = arrow_alpha
+                                                )
+                                                plot <-
+                                                plot + geom_segment(
+                                                data = datapc[gene_subset,], aes(
+                                                x = 0, y = 0, xend = v1, yend = v2
+                                                ), arrow = arrow(length = unit(0.2,"cm")), alpha = arrow_alpha, color =
+                                                arrow_colors
+                                                )
+                                                plot
+                                                }
+                                                
+                                                genes_to_plot <-
+                                                unique(merge(res_gene_hurdle,lfc.anytime)[adj < 0.01 &
+                                                abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:1000,primerid])[1:20]
+                                                stim_sel <- "LPS"
+                                                shalek_LPS_residual_pca <-
+                                                PCbiplot(
+                                                x = "PC1",y = "PC2",prcomp(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Time"] %in%
+                                                c("1h","2h","4h","6h") &
+                                                cData(filtered_nobaseline)[,"Stim"] %like% stim_sel])),meta = cData(subset(filtered_nobaseline,Stim ==
+                                                stim_sel)),gene_subset = genes_to_plot[1:4],scale = 1,point_colors = "Stim",arrow_colors =
+                                                "black"
+                                                ) + facet_wrap( ~ Time,nrow = 1) + theme_linedraw() + theme(
+                                                plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
+                                                element_line(colour = "black")
+                                                )
+                                                
+
+## ----figure5-------------------------------------------------------------
+pdf("../inst/extdata/output/Figure6.pdf",width = 10,height = 6)
+layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
+layout[1:10,37:40] <- 3
+layout[1:10,1] <- 3
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(
+nrow = nrow(layout),ncol = ncol(layout)
+)))
+ind <- which(layout == 1,T)
+vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+print(shalek_LPS_residual_pca,vp = vp)
+ind <- which(layout == 2,T)
+vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+print(shalek_resid_cor_lps,vp = vp)
+grid.text("A",x = 0.01,y = 0.95)
+grid.text("B",x = 0.01,y = 0.45)
+dev.off()
+
+## ------------------------------------------------------------------------
+layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
+layout[1:10,37:40] <- 3
+layout[1:10,1] <- 3
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(
+nrow = nrow(layout),ncol = ncol(layout)
+)))
+ind <- which(layout == 1,T)
+vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+print(shalek_LPS_residual_pca,vp = vp)
+ind <- which(layout == 2,T)
+vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+print(shalek_resid_cor_lps,vp = vp)
+grid.text("A",x = 0.01,y = 0.95)
+grid.text("B",x = 0.01,y = 0.45)
+
+## ----figure5_png---------------------------------------------------------
+png(
+  "../inst/extdata/output/Figure6.png",width = 10 * 300,height = 6 * 300,res =
+  300
+  )
+  layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
+  layout[1:10,37:40] <- 3
+  layout[1:10,1] <- 3
+  grid.newpage()
+  pushViewport(viewport(layout = grid.layout(
+  nrow = nrow(layout),ncol = ncol(layout)
+  )))
+  ind <- which(layout == 1,T)
+  vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+  print(shalek_LPS_residual_pca,vp = vp)
+  ind <- which(layout == 2,T)
+  vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+  print(shalek_resid_cor_lps,vp = vp)
+  grid.text("A",x = 0.01,y = 0.95)
+  grid.text("B",x = 0.01,y = 0.45)
+  dev.off()
+
+## ----zlm_pic, cache=FALSE,dependson="filtering_and_modules;zlm",warning=FALSE,message=FALSE----
+  options(mc.cores = 7)
+  
+  #Test for any time effect
+  M <- matrix(0,nrow = ncol(coef(fit,"D")))
+  rownames(M) <- colnames(coef(fit,"D"))
+  M[colnames(coef(fit,"D")) %like% "PIC",] <- 1
+  M.time <- M
+  M.time["StimPIC",] <- 0
+  anyTime.pic <- lrTest(fit, hypothesis = M.time)
+  anyTime.sorted.pic <-
+  na.omit(anyTime.pic[order(anyTime.pic[,'hurdle','Pr(>Chisq)']),'hurdle',])
+  lfc.anytime.pic <- getLogFC(fit)[contrast %like% "Time"]
+  res_gene_hurdle.pic <-
+  data.table(dcast(melt(anyTime.sorted.pic),primerid ~ metric))
+  res_gene_hurdle.pic = res_gene_hurdle.pic[,adj:= p.adjust(`Pr(>Chisq)`,"fdr")]
+  genes_to_plot.pic <-
+  unique(merge(res_gene_hurdle.pic,lfc.anytime.pic,by = "primerid")[adj <
+  0.01 &
+  abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:100,primerid])[1:20]
+  
+
+## ----zlm_pam,cache=FALSE,dependson="filtering_and_modules;zlm",message=FALSE,warning=FALSE----
+  options(mc.cores = 7)
+  
+  #Test for any time effect
+  M <- matrix(0,nrow = ncol(coef(fit,"D")))
+  rownames(M) <- colnames(coef(fit,"D"))
+  M[colnames(coef(fit,"D")) %like% "PAM",] <- 1
+  M.time <- M
+  M.time["StimPAM",] <- 0
+  anyTime.pam <- lrTest(fit, hypothesis = M.time)
+  anyTime.sorted.pam <-
+  na.omit(anyTime.pam[order(anyTime.pam[,'hurdle','Pr(>Chisq)']),'hurdle',])
+  lfc.anytime.pam <- getLogFC(fit)[contrast %like% "Time"]
+  res_gene_hurdle.pam <-
+  data.table(dcast(melt(anyTime.sorted.pam),primerid ~ metric))
+  res_gene_hurdle.pam = res_gene_hurdle.pam[,adj:= p.adjust(`Pr(>Chisq)`,"fdr")]
+  genes_to_plot.pam <-
+  unique(merge(res_gene_hurdle.pam,lfc.anytime.pam,by = "primerid")[adj <
+  0.01 &
+  abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:100,primerid])[1:20]
+  
+
+## ----viz_pam,cache=FALSE,dependson="filtering_and_modules;zlm_pam"-------
+  setkey(lfc.anytime.pam,primerid)
+  setkey(res_gene_hurdle.pam,primerid)
+  genes_to_plot.pam <-
+  unique(merge(res_gene_hurdle.pam,lfc.anytime.pam)[adj < 0.01 &
+  abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:100,primerid])[1:20]
+  
+  
+  o <-
+  hclust(as.dist(1 - cor.shrink(t(residuals[genes_to_plot.pam,cData(filtered_nobaseline)[,"Stim"] %like%
+  "PAM" & cData(filtered_nobaseline)[,"Time"] %in% c("6h")]))))$order
+  levs <-
+  colnames(cor.shrink(t(residuals[genes_to_plot.pam,cData(filtered_nobaseline)[,"Stim"] %like%
+  "PAM" & cData(filtered_nobaseline)[,"Time"] %in% c("1h")]))[o,o])
+  
+  colors <- brewer.pal(name = "PiYG",n = 11)
+  mkDT <- function(x,time) {
+  foo <- melt(x)
+  setnames(foo,c("x","y","rho"))
+  foo <- data.frame(foo,time = time)
+  foo
+}
+  toplot <-  rbind(
+  mkDT(cor.shrink(t(residuals[genes_to_plot.pam,cData(filtered_nobaseline)[,"Stim"] %like%
+  "PAM" & cData(filtered_nobaseline)[,"Time"] %in% c("1h")]))[o,o],"1h"),
+  mkDT(cor.shrink(t(residuals[genes_to_plot.pam,cData(filtered_nobaseline)[,"Stim"] %like%
+  "PAM" & cData(filtered_nobaseline)[,"Time"] %in% c("2h")]))[o,o],"2h"),
+  mkDT(cor.shrink(t(residuals[genes_to_plot.pam,cData(filtered_nobaseline)[,"Stim"] %like%
+  "PAM" & cData(filtered_nobaseline)[,"Time"] %in% c("4h")]))[o,o],"4h"),
+  mkDT(cor.shrink(t(residuals[genes_to_plot.pam,cData(filtered_nobaseline)[,"Stim"] %like%
+  "PAM" & cData(filtered_nobaseline)[,"Time"] %in% c("6h")]))[o,o],"6h")
+  )
+  
+  shalek_resid_cor_pam <-
+  ggplot(toplot) + aes(x = x,y = y,fill = rho) + facet_wrap( ~time,nrow =
+  1) + geom_tile() + scale_x_discrete("",limits = levs) + scale_y_discrete("",limits =
+  levs) + scale_fill_gradient2(
+  limits = c(-1,1),low = colors[1],high = colors[11],mid = colors[6],space =
+  "Lab"
+  ) + theme_linedraw() + theme(
+  axis.text.x = element_text(
+  angle = 90,hjust = 1,size = 7
+  ),axis.text.y = element_text(size = 7),legend.position = "right",plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
+  element_line(colour = "black")
+  )
+  
+  genes_to_plot <-
+  unique(merge(res_gene_hurdle.pam,lfc.anytime.pam)[adj < 0.01 &
+  abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:1000,primerid])[1:20]
+  stim_sel <- "PAM"
+  shalek_PAM_residual_pca <-
+  PCbiplot(
+  x = "PC1",y = "PC2",prcomp(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Time"] %in%
+  c("1h","2h","4h","6h") &
+  cData(filtered_nobaseline)[,"Stim"] %like% stim_sel])),meta = cData(subset(filtered_nobaseline,Stim ==
+  stim_sel)),gene_subset = genes_to_plot[1:4],scale = 1,point_colors = "Stim",arrow_colors =
+  "black"
+  ) + facet_wrap( ~ Time,nrow = 1) + theme_linedraw() + theme(
+  plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
+  element_line(colour = "black")
+  )
+
+## ----pam_resid_cor_pca_png-----------------------------------------------
+  png(
+    "../inst/extdata/output/Supplementary_Figure_7.png",width = 10 * 300,height =
+    6 * 300,res = 300
+    )
+    layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
+    layout[1:10,37:40] <- 3
+    layout[1:10,1] <- 3
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(
+    nrow = nrow(layout),ncol = ncol(layout)
+    )))
+    ind <- which(layout == 1,T)
+    vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+    print(shalek_PAM_residual_pca,vp = vp)
+    ind <- which(layout == 2,T)
+    vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+    print(shalek_resid_cor_pam,vp = vp)
+    grid.text("A",x = 0.01,y = 0.95)
+    grid.text("B",x = 0.01,y = 0.45)
+    dev.off()
+
+## ------------------------------------------------------------------------
+    layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
+    layout[1:10,37:40] <- 3
+    layout[1:10,1] <- 3
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(
+    nrow = nrow(layout),ncol = ncol(layout)
+    )))
+    ind <- which(layout == 1,T)
+    vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+    print(shalek_PAM_residual_pca,vp = vp)
+    ind <- which(layout == 2,T)
+    vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+    print(shalek_resid_cor_pam,vp = vp)
+    grid.text("A",x = 0.01,y = 0.95)
+    grid.text("B",x = 0.01,y = 0.45)
+
+## ----viz_pic,cache=FALSE,dependson="filtering_and_modules;zlm_pic"-------
+    setkey(lfc.anytime.pic,primerid)
+    setkey(res_gene_hurdle.pic,primerid)
+    genes_to_plot.pic <-
+    unique(merge(res_gene_hurdle.pic,lfc.anytime.pic,by = "primerid")[contrast %like%
+    "PIC"][adj < 0.01 &
+    abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:100,primerid])[1:20]
+    
+    R <- residuals
+    o <-
+    hclust(as.dist(1 - cor.shrink(t(R[genes_to_plot.pic,cData(filtered_nobaseline)[,"Stim"] %like%
+    "PIC" & cData(filtered_nobaseline)[,"Time"] %in% c("6h")]))))$order
+    levs <-
+    colnames(cor.shrink(t(R[genes_to_plot.pic,cData(filtered_nobaseline)[,"Stim"] %like%
+    "PIC" & cData(filtered_nobaseline)[,"Time"] %in% c("1h")]))[o,o])
+    
+    #plot(t(residuals[c("CCL5","IFI205"),cData(filtered_nobaseline)[,"Stim"]%in%"PIC"&cData(filtered_nobaseline)[,"Time"]%in%"1h"]))
+    #plot(t(t(exprs(filtered_nobaseline))[c("CCL5","IFI205"),cData(filtered_nobaseline)[,"Stim"]%in%"PIC"&cData(filtered_nobaseline)[,"Time"]%in%"1h"]))
+    
+    colors <- brewer.pal(name = "PiYG",n = 11)
+    toplot <-
+    rbind(
+    mkDT(cor.shrink(t(R[genes_to_plot.pic,cData(filtered_nobaseline)[,"Stim"] %in%
+    "PIC" & cData(filtered_nobaseline)[,"Time"] %in% c("1h")]))[o,o],"1h"),
+    mkDT(cor.shrink(t(R[genes_to_plot.pic,cData(filtered_nobaseline)[,"Stim"] %in%
+    "PIC" & cData(filtered_nobaseline)[,"Time"] %in% c("2h")]))[o,o],"2h"),
+    mkDT(cor.shrink(t(R[genes_to_plot.pic,cData(filtered_nobaseline)[,"Stim"] %in%
+    "PIC" & cData(filtered_nobaseline)[,"Time"] %in% c("4h")]))[o,o],"4h"),
+    mkDT(cor.shrink(t(R[genes_to_plot.pic,cData(filtered_nobaseline)[,"Stim"] %in%
+    "PIC" & cData(filtered_nobaseline)[,"Time"] %in% c("6h")]))[o,o],"6h")
+    )
+    shalek_resid_cor_pic <-
+    ggplot(toplot) + aes(x = x,y = y,fill = rho) + facet_wrap( ~ time,nrow =
+    1) + geom_tile() + scale_x_discrete("",limits = levs) + scale_y_discrete("",limits =
+    levs) + scale_fill_gradient2(
+    limits = c(-1,1),low = colors[1],high = colors[11],mid = colors[6],space =
+    "Lab"
+    ) + theme_linedraw() + theme(
+    axis.text.x = element_text(
+    angle = 90,hjust = 1,size = 7
+    ),axis.text.y = element_text(size = 7),legend.position = "right",plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
+    element_line(colour = "black")
+    )
+    
+    genes_to_plot <-
+    unique(merge(res_gene_hurdle.pic,lfc.anytime.pic)[adj < 0.01 &
+    abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:1000,primerid])[1:20]
+    stim_sel <- "PIC"
+    shalek_PIC_residual_pca <-
+    PCbiplot(
+    x = "PC1",y = "PC2",prcomp(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Time"] %in%
+    c("1h","2h","4h","6h") &
+    cData(filtered_nobaseline)[,"Stim"] %like% stim_sel])),meta = cData(subset(filtered_nobaseline,Stim ==
+    stim_sel)),gene_subset = genes_to_plot[1:4],scale = 1,point_colors = "Stim",arrow_colors =
+    "black"
+    ) + facet_wrap( ~ Time,nrow = 1) + theme_linedraw() + theme(
+    plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
+    element_line(colour = "black")
+    )
+
+## ----pic_resid_cor_pca_png-----------------------------------------------
+    png(
+      "../inst/extdata/output/Supplementary_Figure_8.png",width = 10 * 300,height =
+      6 * 300,res = 300
+      )
+      layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
+      layout[1:10,37:40] <- 3
+      layout[1:10,1] <- 3
+      grid.newpage()
+      pushViewport(viewport(layout = grid.layout(
+      nrow = nrow(layout),ncol = ncol(layout)
+      )))
+      ind <- which(layout == 1,T)
+      vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+      print(shalek_PIC_residual_pca,vp = vp)
+      ind <- which(layout == 2,T)
+      vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+      print(shalek_resid_cor_pic,vp = vp)
+      grid.text("A",x = 0.01,y = 0.95)
+      grid.text("B",x = 0.01,y = 0.45)
+      dev.off()
+
+## ------------------------------------------------------------------------
+     layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
+      layout[1:10,37:40] <- 3
+      layout[1:10,1] <- 3
+      grid.newpage()
+      pushViewport(viewport(layout = grid.layout(
+      nrow = nrow(layout),ncol = ncol(layout)
+      )))
+      ind <- which(layout == 1,T)
+      vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+      print(shalek_PIC_residual_pca,vp = vp)
+      ind <- which(layout == 2,T)
+      vp = viewport(layout.pos.row = ind[,1],layout.pos.col = ind[,2])
+      print(shalek_resid_cor_pic,vp = vp)
+      grid.text("A",x = 0.01,y = 0.95)
+      grid.text("B",x = 0.01,y = 0.45)
+
