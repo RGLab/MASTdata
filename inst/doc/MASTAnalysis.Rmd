@@ -1,8 +1,7 @@
 ---
 title: 'MAST: A flexible statistical framework for assessing transcriptional changes
   and characterizing heterogeneity in single-cell RNA-seq data. MAIT Analysis.'
-author: Greg Finak, Andrew McDavid, Masanao Yajima, Jingyuan Deng, Alex Shalek, Martin
-  Prlic, Peter Linsley, Raphael Gottardo
+author: Greg Finak, Andrew McDavid, Masanao Yajima, Jingyuan Deng, Vivian Gersuk, Alex Shalek, Chloe K. Schlicter, Hannah W. Miller, Martin  Prlic, Peter Linsley, Raphael Gottardo
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -14,11 +13,11 @@ vignette: >
 
 ```{r eval=FALSE}
 # library(devtools)
-# install_git("http://github.fhcrc.org/gottardo-r/MASTDataPackage")
+# install_git("http://github.com/RGLab/MASTDataPackage")
 # install_git('http://github.com/RGLab/MAST')
 ```
 
-```{r,echo=FALSE}
+```{r,echo=FALSE, error=FALSE}
 # Multiple plot function
 #
 # ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
@@ -68,6 +67,9 @@ layout.pos.col = matchidx$col
 }
 }
 suppressPackageStartupMessages({
+library(MIMOSA)
+library(plyr)
+library(reshape)
 library("ggplot2")
 library("MASTDataPackage")
 library("MAST")
@@ -75,15 +77,22 @@ library("GSEABase")
 library("limma")
 library(grid)
 library("reshape2")
-  library(reshape)
 library(RColorBrewer)
 library("data.table")
-library(plyr)
 library("knitr")
 library(psych)
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-options(mc.cores = detectCores() - 1)
+library(org.Hs.eg.db)
+library(flowClust)
+library(COMPASS)
+library(scales)
+library(grid)
+library(stringr)
+library(gridExtra)
+library(class)
+options(mc.cores = detectCores() - 1) #or set smaller if you find yourself running out of memory
 })
+LARGE_MEMORY_CORES <- 7 #for large memory operations
 knitr::opts_chunk$set(list(
 echo = FALSE,eval = TRUE,message = FALSE,error = FALSE,warning = FALSE,cache = TRUE))
 plotheme <-
@@ -109,10 +118,7 @@ FCTHRESHOLD <- log2(1.5)
 ```{r filter_outlying_cell,results='hide'}
 sca <- subset(sca,nGeneOn > 4000)
 eid <-
-select(
-TxDb.Hsapiens.UCSC.hg19.knownGene,keys = fData(sca_mait)$entrez,keytype =
-"GENEID",columns = c("GENEID","TXNAME")
-)
+select(TxDb.Hsapiens.UCSC.hg19.knownGene,keys = fData(sca_mait)$entrez,keytype ="GENEID",columns = c("GENEID","TXNAME"))
 ueid <- unique(na.omit(eid)$GENEID)
 sca <- sca[,fData(sca)$entrez %in% ueid]
 ```
@@ -154,7 +160,7 @@ dt_long[, `:=`(condition, ifelse(grepl("-Stim", variable), "Stim", "Unstim"))]
 ### ZLM results
 
 ```{r zlm, dependson="data",results='hide'}
-options(mc.cores=7)
+options(mc.cores=LARGE_MEMORY_CORES)
 # ZLM (ridge regression for continuous, get standardized deviance residuals)
 cond<-factor(cData(sca)$condition)
 cond<-relevel(cond,"Unstim")
@@ -162,6 +168,10 @@ cData(sca)$condition<-cond
 zlm <- zlm.SingleCellAssay(~condition + cngeneson, sca, method = "bayesglm", 
     ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"))
 zlm.nongeneson <- zlm.SingleCellAssay(~condition , sca, method = "bayesglm", 
+    ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"))
+zlm.notrt <- zlm.SingleCellAssay(~cngeneson , sca, method = "bayesglm", 
+    ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"))
+zlm.null <- zlm.SingleCellAssay(~1 , sca, method = "bayesglm", 
     ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"))
 # LRT
 lrt <- lrTest(zlm, "condition")
@@ -193,16 +203,43 @@ nrow(res_gene_hurdle_nong[adj<0.01])
 nrow(res_gene_hurdle[adj<0.01])
 ```
 
+
+```{r compare_ranks}
+A=copy(res_gene_hurdle_nong)
+B=copy(res_gene_hurdle)
+A=na.omit(A[order(-abs(logFC),adj)])
+B=na.omit(B[order(-abs(logFC),adj)])
+C=merge(A[,.(.I,symbolid)],B[,.(.I,symbolid)],by="symbolid")
+setkey(C,I.x)
+ggplot(data.table(ngenes=seq(100,nrow(C),by=100),overlap=sapply(seq(100,nrow(C),by=100),function(x)mean(C[1:x,I.x<x&I.y<x]))))+geom_line(aes(x=ngenes,y=overlap))+theme_linedraw()+scale_x_continuous("Number of top genes Selected")+scale_y_continuous("Proportion overlap between CDR and non CDR models")+geom_vline(x = c(291,1491),lty=2)
+C[1:1491]
+cat(paste(C[1:1491][!C[1:1491,I.x<1491&I.y<1491],symbolid],"\n"),file="../inst/extdata/withoutCDR.txt")
+cat(paste(C[1:1491][C[1:1491,I.x<1491&I.y<1491],symbolid],"\n"),file="../inst/extdata/withCDR.txt")
+cat(paste(C[,symbolid],"\n"),file="../inst/extdata/universe.txt")
+```
+
+```{r}
+#gsea for limma exclusive genes
+gsea_exclusive_other_methods<-readRDS("~/Downloads/significant_genes_q001_fc13.rds")
+setDT(gsea_exclusive_other_methods)
+
+#limma only
+cat(paste0(gsea_exclusive_other_methods[limma_ng&!zlm_ng,symbolid],"\n"),file="../inst/extdata/Limma_only.txt")
+cat(paste0(gsea_exclusive_other_methods[edger_ng&!zlm_ng,symbolid],"\n"),file="../inst/extdata/edger_only.txt")
+cat(paste0(gsea_exclusive_other_methods[deseq_ng & !zlm_ng,symbolid],"\n"),file="../inst/extdata/deseq_only.txt")
+```
+
+
 We observe `r nrow(res_gene_hurdle_nong[adj<0.01])` differentially expressed genes without the CDR effect in the model, and `r nrow(res_gene_hurdle[adj<0.01])` with the CDR effect.
 
-### Analysis of deviance for ngeneson (Supplementary Figure 4)
+### Analysis of deviance for ngeneson (Supplementary Figure 2)
 
 ```{r supp_fig_percent_deviance,results='hide'}
 library(scales)
-toplot=data.table(melt(100*(zlm.nongeneson@deviance-zlm@deviance)/zlm.nongeneson@deviance))
-toplot=toplot[,X2:=factor(X2,labels=c("Continuous","Discrete"))]
-p1<-ggplot(toplot)+geom_histogram(position="identity",alpha=0.5)+aes(x=value)+theme_linedraw()+plotheme+facet_wrap(~X2)+scale_x_continuous("% Deviance")
-p1<-ggplot(toplot)+geom_boxplot()+aes(y=value,x=X2)+theme_linedraw()+plotheme+scale_y_log10("% Deviance")+scale_x_discrete("Component")
+
+panelb=rbind(data.table(melt((zlm.notrt@deviance-zlm@deviance)/zlm.null@deviance),model="trt"),data.table(melt((zlm.nongeneson@deviance-zlm@deviance)/zlm.null@deviance),model="cdr"))
+setnames(panelb,c("gene","component","value","model"))
+panelb=dcast(panelb,...~model)
 
 #Shalek data for this SFig
 filtered<-sca_alex
@@ -223,33 +260,32 @@ cData(filtered)$Time <- factor(cData(filtered)$Time)
 filtered_nobaseline <- subset(filtered,!Stim%in%c("Unstimulated")) #drop Time 0
 cData(filtered_nobaseline)$Stim <- factor(cData(filtered_nobaseline)$Stim)
 cData(filtered_nobaseline)$Time <- factor(cData(filtered_nobaseline)$Time)
-options(mc.cores = 7)
 ng <- zlm.SingleCellAssay(~cngeneson+Stim/Time,sca=filtered_nobaseline,method="ridge",ebayes=TRUE)
 nong <- zlm.SingleCellAssay(~Stim/Time,sca=filtered_nobaseline,method="ridge",ebayes=TRUE)
-toplot.s<-data.table(melt(100*(nong@deviance-ng@deviance)/nong@deviance))
-toplot.s=toplot.s[,X2:=factor(X2,labels=c("Continuous","Discrete"))]
-p2<-ggplot(toplot.s)+geom_histogram(position="identity",alpha=0.5)+aes(x=value)+theme_linedraw()+plotheme+facet_wrap(~X2)+scale_x_continuous("% Deviance")
-p2<-ggplot(toplot.s)+geom_boxplot()+aes(y=value,x=X2)+theme_linedraw()+plotheme+scale_y_log10("% Deviance")+scale_x_discrete("Component")
-toplot.combined<-data.table(rbind(data.table(toplot,data="MAIT"),data.table(toplot.s,data="DC")))
-setnames(toplot.combined,c("Gene","Component","pdev","Dataset"))
-p3<-ggplot(toplot.combined[pdev>0])+geom_boxplot()+aes(x=Component,y=pdev)+facet_wrap(~Dataset)+theme_linedraw()+plotheme+coord_trans(ytrans=MIMOSA:::asinh_trans(1))+scale_y_continuous("% Deviance Explained")+theme(axis.text.x=element_text(angle=45,hjust=1))+scale_x_discrete("Model Component")
+notrt <- zlm.SingleCellAssay(~cngeneson,sca=filtered_nobaseline,method="ridge",ebayes=TRUE)
+nullmodel = zlm.SingleCellAssay(~1,sca=filtered_nobaseline,method="ridge",ebayes=TRUE)
 
-p3 = ggplot(toplot.combined[pdev > 0]) + stat_ecdf() + aes(col = Component,x = pdev) +
-  facet_wrap( ~Dataset) + theme_linedraw() + plotheme + coord_trans(ytrans =
-  MIMOSA:::asinh_trans(1)) + scale_y_continuous("Fraction of Genes") +
-  theme(axis.text.x = element_text(angle = 45,hjust = 1)) + scale_x_continuous("Percent Deviance Explained by CDR")
 
-pdf(file = "../inst/extdata/output/Supplementary_Figure_4.pdf",width = 4,height =
-      3)
+panelc=rbind(data.table(melt((notrt@deviance-ng@deviance)/nullmodel@deviance),model="trt"),data.table(melt((nong@deviance-ng@deviance)/nullmodel@deviance),model="cdr"))
+setnames(panelc,c("gene","component","value","model"))
+panelc=dcast(panelc,...~model)
+#ggplot(panelc)+aes(x=trt,y=cdr,col=component)+geom_point()
+
+toplot = rbind(cbind(panelc,dataset="mdc"),cbind(panelb,dataset="MAIT"))
+
+p3 = ggplot(toplot)+geom_hex()+aes(x=cdr,y=trt)+facet_grid(component~dataset)+theme_linedraw()+scale_color_discrete("Component",labels=c("Continouos","Discrete"))+scale_x_continuous("Proportion of deviance explained by CDR")+scale_y_continuous("Proportion of deviance explained by treatment")+scale_fill_distiller(type = "div",palette = 2,space = "Lab",trans="log",breaks=c(1,10,50,100,250,500))
+pdf(file = "../inst/extdata/output/Supplementary_Figure_2.pdf",width = 8,height =
+      5)
       print(p3)
       dev.off()
+      print(p3)
 ```
 
 ```{r,include=TRUE}
 cat("Mean % Deviance")
-kable(ddply(toplot.combined[pdev>=0],.(Dataset,Component),function(x)mean(x$pdev)))
+kable(ddply(data.table(toplot)[cdr>0],.(dataset,component),function(x)mean(x$cdr)*100))
 cat("% Deviance 90th Percentile")
-kable(ddply(toplot.combined[pdev>=0],.(Dataset,Component),function(x)quantile(x$pdev,0.9)))
+kable(ddply(data.table(toplot)[cdr>0],.(dataset,component),function(x)quantile(x$cdr,0.9)*100))
 print(p3)
 ```
 
@@ -304,7 +340,7 @@ setorder(t_stat_comb,P)
 t_stat_comb[,adj:=p.adjust(P,"fdr")]
 
 ##Filter by effect size: discrete odds ratio of 1
-t_stat_comb=t_stat_comb[set%in%names(which(abs(gsea[,"disc","stat","test"]-gsea[,"disc","stat","null"])>1))|set%in%names(which(abs(gsea[,"cont","stat","test"]-gsea[,"cont","stat","null"])>log2(1.5)))]
+t_stat_comb=t_stat_comb[set%in%names(which(abs(gsea[,"disc","stat","test"]-gsea[,"disc","stat","null"])>log(2.5) ))|set%in%names(which(abs(gsea[,"cont","stat","test"]-gsea[,"cont","stat","null"])>log2(1.5)))]
 ```
 
 
@@ -325,10 +361,8 @@ for (i in c(1:10,12,13)) {
 <!-- ### Visualization of module "scores" for stimulated and unstimulated cells -->
 
 ```{r scores_fit, dependson="data;gsea;zlm",fig.width=10,fig.height=10}
-options("mc.cores" = 7)
+options("mc.cores" = LARGE_MEMORY_CORES)
 
-#zlm.scores <- zlm.SingleCellAssay(~condition + cngeneson, sca, method = "bayesglm",
-#    ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"),hook=score_2_hook)
 score_4_hook <- function(x) {
   if (all(x@fitted)) {
     class(x@fitC) <- c("glm","lm")
@@ -393,7 +427,7 @@ scores$set <-
 sapply(as.character(scores$set),function(x)
 Kmisc::wrap(x,width = 25))
 sets <-
-sapply(t_stat_comb[order(-abs(t_stat_comb$Z),t_stat_comb$adj),set][c(1:6)],function(x)
+sapply(t_stat_comb[order(-abs(t_stat_comb$Z),t_stat_comb$adj),set][c(1:9)],function(x)
 Kmisc::wrap(x,25))
 #sets <- gsub("\n$","",gsub(".\\(M.+$","",sets[!sets %like% "TBA"]))
 gsea_scores <-
@@ -443,7 +477,7 @@ value) + geom_tile() + scale_y_discrete(limits = ylevels) +
 
 
 ```{r figure3_pdf,results='hide'}
-pdf("../inst/extdata/output/Figure4.pdf",width=15,height=7.5)
+pdf("../inst/extdata/output/Figure3.pdf",width=15,height=7.5)
 layout<-cbind(cbind(matrix(2,ncol=1,nrow=10),matrix(1,nrow=10,ncol=9)),cbind(matrix(3,nrow=10,ncol=9),matrix(2,ncol=1,nrow=10)))
 lay<-grid.layout(nrow = nrow(layout),ncol=ncol(layout))
 grid.newpage()
@@ -461,7 +495,7 @@ dev.off()
 ```
 
 ```{r figure3_png,results='hide'}
-png("../inst/extdata/output/Figure4.png",width=15*300,height=7.5*300,res=300)
+png("../inst/extdata/output/Figure3.png",width=15*300,height=7.5*300,res=300)
 layout<-cbind(cbind(matrix(2,ncol=1,nrow=10),matrix(1,nrow=10,ncol=9)),cbind(matrix(3,nrow=10,ncol=9),matrix(2,ncol=1,nrow=10)))
 lay<-grid.layout(nrow = nrow(layout),ncol=ncol(layout))
 grid.newpage()
@@ -478,9 +512,9 @@ grid.text("B",x = 0.5,y=0.95)
 dev.off()
 ```
 
-### Figure 4 GSEA Results for MAIT Data Set
+### Figure 3 GSEA Results for MAIT Data Set
 
-```{r,fig.cap='Figure 4',fig.width=12,fig.height=8}
+```{r,fig.cap='Figure 3',fig.width=12,fig.height=8}
 layout<-cbind(cbind(matrix(2,ncol=1,nrow=10),matrix(1,nrow=10,ncol=9)),cbind(matrix(3,nrow=10,ncol=9),matrix(2,ncol=1,nrow=10)))
 lay<-grid.layout(nrow = nrow(layout),ncol=ncol(layout))
 grid.newpage()
@@ -601,7 +635,7 @@ COMPASS::pheatmap(C,row_annotation=cData(sca)[,"condition",drop=FALSE],show_rown
 <!-- ### Differentially expressed genes without Ngeneson -->
 
 ```{r nongeneson,dependson="data;zlm",include=FALSE,eval=TRUE}
-options("mc.cores"=7)
+options("mc.cores"=LARGE_MEMORY_CORES)
 zlm.resid.nong <- zlm.SingleCellAssay(~condition , sca, method = "bayesglm", 
     ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"),hook=deviance_residuals_hook)
 lrt.nong <- lrTest(zlm.resid.nong, "condition")
@@ -725,10 +759,10 @@ genes_to_plot <- res_gene_hurdle[abs(logFC)>FCTHRESHOLD&adj<0.01][order(-abs(log
 pcaplot<-PCbiplot(prcomp(t(residuals[genes_to_plot,])),point_colors=point_colors,arrow_colors="blue",arrow_alpha=0.75,gene_subset=genes)+theme_bw()
 ```
 
-```{r figure2}
+```{r figure4}
 lout<-matrix(rep(c(1,2,3),each=100),ncol=30)
 lout<-rbind(rep(4,30),lout,rep(4,30))
-pdf(file="../inst/extdata/output/Figure3.pdf",width=15,height=5)
+pdf(file="../inst/extdata/output/Figure4.pdf",width=15,height=5)
 grid.newpage()
 lay<-grid.layout(nrow(lout), ncol(lout))
 pushViewport(viewport(layout=lay,name = "top"))
@@ -752,10 +786,10 @@ dev.off()
 
 ```
 
-```{r figure2_png}
+```{r figure4_png}
 lout<-matrix(rep(c(1,2,3),each=100),ncol=30)
 lout<-rbind(rep(4,30),lout,rep(4,30))
-png(file="../inst/extdata/output/Figure3.png",width=300*15,height=300*5,res=300)
+png(file="../inst/extdata/output/Figure4.png",width=300*15,height=300*5,res=300)
 grid.newpage()
 lay<-grid.layout(nrow(lout), ncol(lout))
 pushViewport(viewport(layout=lay,name = "top"))
@@ -779,7 +813,7 @@ dev.off()
 
 ```
 
-### Figure 3 - Residual Correlations and PCA
+### Figure 4 - Residual Correlations and PCA
 
 ```{r,fig.width=10}
 grid.newpage()
@@ -885,6 +919,13 @@ C2.s<-extractCor(S2.s,rownames(S2.s),class = "ngeneson",model = "ngeneson")
 C3<-rbind(C,C2)
 C3.s<-rbind(C.s,C2.s)
 
+stopifnot(all.equal(C[,list(gene1, gene2)],C2[,list(gene1, gene2)]))
+stopifnot(all.equal(C.s[,list(gene1, gene2)],C2.s[,list(gene1, gene2)]))
+Cboth <- rbind(data.table("Rho (background)"=C[,rho], "Rho (CDR)"=C2[,rho], Condition='Non-stimulated'),
+               data.table("Rho (background)"=C.s[,rho], "Rho (CDR)"=C2.s[,rho], Condition='Stimulated'))
+Cboth <- Cboth[sample(nrow(Cboth), 1e5),]
+
+
 
 C3 = C3[,delrho := rho[class == "no_ngeneson"] - rho[class == "ngeneson"],list(gene1,gene2)]
 C3.s[,delrho := rho[class == "no_ngeneson"] - rho[class == "ngeneson"],list(gene1,gene2)]
@@ -927,7 +968,7 @@ library(gridExtra)
 
 colors<-c(brewer.pal(name = "PiYG",n=3)[c(1)],"#5729EE")
 layout<-matrix(1,ncol=1)
-pdf("../inst/extdata/output/Supplementary_Figure_3.pdf",width=8,height=4)
+pdf("../inst/extdata/output/Supplementary_Figure_10.pdf",width=8,height=4)
 grid.newpage()
 pushViewport(viewport(layout = grid.layout(nrow=1,ncol=1)))
 print(p+plotheme+scale_color_discrete("Condition",labels=c("Stimulated","Non-stimulated")),vp=viewport(layout.pos.row = 1,layout.pos.col = 1))
@@ -966,7 +1007,7 @@ sum(highly.correlated.genes.ng.unstim%in%c(mait_signature_genes_up,mait_signatur
 sum(highly.correlated.genes.nong.unstim%in%c(mait_signature_genes_up,mait_signature_genes_down))
 ```
 
-### Supplementary Figure 3 - Residual Background Correlation
+### Supplementary Figure 10 - Residual Background Correlation
 
 ```{r,fig.width=10}
 grid.newpage()
@@ -1048,7 +1089,7 @@ hmap_unstim_nonresponders<-grid.grab(wrap=TRUE)
 ```{r}
 nonresponders_biplot<-PCbiplot(prcomp(exprs(sca[,c(genes_to_plot_noact,genes_to_plot_block)])),x="PC1",y="PC2",point_colors = c("#E9A3C9","#5729EE")[cData(sca)$block+1],gene_subset=c(1:6,26,29:34))+theme_linedraw()+theme(aspect.ratio=1)+plotheme
 
-pdf("../inst/extdata/output/Supplementary_Figure_9.pdf",width=24,height=7)
+pdf("../inst/extdata/output/Supplementary_Figure_14.pdf",width=24,height=7)
 grid.newpage()
 pushViewport(viewport(layout = grid.layout(nrow=1,ncol=3)))
 vp<-viewport(layout.pos.row = 1,layout.pos.col = 1)
@@ -1081,7 +1122,7 @@ symbols<-data.table(symbols)
 kable(symbols[chrmap%in%(symbols[,.N,chrmap][N>1]$chrmap)][order(chrmap)])
 ```
 
-### Supplementary Figure 9
+### Supplementary Figure 14
 
 ```{r, fig.width=10}
 grid.newpage()
@@ -1124,7 +1165,7 @@ t_stat_unstim$set <- rownames(t_stat_unstim)
 t_stat_unstim_comb <- data.table(merge(t_stat_unstim_wide, t_stat_unstim, by = "set"))
 setorder(t_stat_unstim_comb,P)
 t_stat_unstim_comb[p.adjust(disc_P,"fdr")<0.01, ][order(disc_Z)]
-filt_unstim_filt=unique(c(names(which(abs(gsea_noact_unstim[,"disc","stat","test"]-gsea_noact_unstim[,"disc","stat","null"])>1)),names(which(abs(gsea_noact_unstim[,"cont","stat","test"]-gsea_noact_unstim[,"cont","stat","null"])>log2(1.5)))))
+filt_unstim_filt=unique(c(names(which(abs(gsea_noact_unstim[,"disc","stat","test"]-gsea_noact_unstim[,"disc","stat","null"])> log(2.5) )),names(which(abs(gsea_noact_unstim[,"cont","stat","test"]-gsea_noact_unstim[,"cont","stat","null"])>log2(1.5)))))
 t_stat_unstim_comb[set%in%filt_unstim_filt&p.adjust(disc_P,"fdr")<0.01][order(disc_Z)]
 
 t_stat_stim <- melt(calcZ(gsea_noact_stim, testType = "normal"))
@@ -1133,7 +1174,7 @@ t_stat_stim <- data.frame(calcZ(gsea_noact_stim, testType = "normal", combined =
 t_stat_stim$set <- rownames(t_stat_stim)
 t_stat_stim_comb <- data.table(merge(t_stat_stim_wide, t_stat_stim, by = "set"))
 setorder(t_stat_stim_comb,P)
-filt_stim_filt=unique(c(names(which(abs(gsea_noact_stim[,"disc","stat","test"]-gsea_noact_stim[,"disc","stat","null"])>1)),names(which(abs(gsea_noact_stim[,"cont","stat","test"]-gsea_noact_stim[,"cont","stat","null"])>log2(1.5)))))
+filt_stim_filt=unique(c(names(which(abs(gsea_noact_stim[,"disc","stat","test"]-gsea_noact_stim[,"disc","stat","null"])> log(2.5) )),names(which(abs(gsea_noact_stim[,"cont","stat","test"]-gsea_noact_stim[,"cont","stat","null"])>log2(1.5)))))
 t_stat_stim_comb[set%in%filt_stim_filt&p.adjust(disc_P,"fdr")<0.01][order(disc_Z)]
 
 lim=t_stat_stim_comb[set%in%filt_stim_filt&p.adjust(P,"fdr")<0.01][order(Z),set]

@@ -200,7 +200,7 @@ toplot[,adjp:= p.adjust(P,"fdr"),.(factor(coefficient %like% "LPS"):factor(coeff
 
 #compute effect size filters for each coefficient
 effect.filters = lapply(gsea.time,function(x) {
-  data.table(GOID = rownames(x),effectfilter = abs(x[,"disc","stat","test"] - x[,"disc","stat","null"]) > 1 |
+  data.table(GOID = rownames(x),effectfilter = abs(x[,"disc","stat","test"] - x[,"disc","stat","null"]) > log(2.5) |
   abs(x[,"cont","stat","test"] - x[,"cont","stat","null"]) > log2(1.5))
   })
 names(effect.filters) = colnames(coef(fit,"D"))[colnames(coef(fit,"D")) %like% "Time"]
@@ -341,13 +341,10 @@ PCbiplot(
                                                         "LPS"]))),meta = cData(subset(filtered_nobaseline,Stim %in% "LPS")),point_colors = "Time",gene_subset = c(52,62,65,85,18,19)
 ) + facet_wrap( ~Time) + theme_linedraw() + plotheme
 ggsave(
-  "../inst/extdata/output/Supplement_Figure_LPS_CORE_ANTIVIRAL_RESIDUALS_PCA.pdf"
+  "../inst/extdata/output/Supplementary_Figure_11.pdf"
 )
 ggsave(
-  "../inst/extdata/output/Supplement_Figure_LPS_CORE_ANTIVIRAL_RESIDUALS_PCA.png"
-)
-ggsave(
-  "../inst/extdata/output/Supplement_Figure_LPS_CORE_ANTIVIRAL_RESIDUALS_PCA.png"
+  "../inst/extdata/output/Supplementary_Figure_11.png"
 )
 
 ## ---- dependson="zlm;filtering_and_modules;gsea",cache=FALSE,warning=FALSE,message=FALSE----
@@ -381,7 +378,7 @@ scores <- do.call(rbind,fit.scores@hookOut)
 nms <- names(fit.scores@hookOut)
 rownames(scores) <- nms
 len <- length(levs)
-setinclude <- levs[c((len - 8):len)]
+setinclude <- levs[1:9]
 setmap <- unique(toplot[TERM %in% setinclude,list(.id = TERM,GOID)])
 foo <-
   llply(setmap[,GOID],function(x)
@@ -393,10 +390,11 @@ foo$.id <-
   sapply(gsub(".\\(.+$","",foo$.id),function(x)
     Kmisc::wrap(x,25))
 colnames(foo)[2] <- "score"
+
 shalek_gsea_scores <-
-  ggplot(data.table(foo)[Stim %in% "LPS"]) + aes(y = score,x = Time,fill =
+  ggplot(setDT(foo)[Stim %in% "LPS",shp:=wellKey%in%c("LPS_1h_S51_rsem","LPS_1h_S52_rsem")]) + aes(y = score,x = Time,fill =
                                                    Time) + facet_wrap( ~.id,scales = "free_y") + geom_violin() + geom_jitter(alpha =
-                                                                                                                               0.4) + theme_bw() + scale_fill_brewer(type = "seq",palette = 1,guide = FALSE) +
+                                                                                                                               0.4,aes(shape=shp),show_guide=FALSE) + theme_bw() + scale_fill_brewer(type = "seq",palette = 1,guide = FALSE) +
   theme_linedraw() + theme(
     plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
       element_line(colour = "black"),legend.position = "bottom",strip.text.y =
@@ -404,7 +402,7 @@ shalek_gsea_scores <-
   ) + geom_hline(aes(y = 0),lty = 2) + geom_smooth(aes(group = 1),method =
                                                      "loess")
 
-## ----figure4-------------------------------------------------------------
+## ----figure5-------------------------------------------------------------
 pdf("../inst/extdata/output/Figure5.pdf",width = 15,height = 10)
 grid.newpage()
 layout <- matrix(rep(c(1,2),each = 100),ncol = 20)
@@ -610,7 +608,7 @@ de_genes_ng <-
                                                 )
                                                 
 
-## ----figure5-------------------------------------------------------------
+## ----figure6-------------------------------------------------------------
 pdf("../inst/extdata/output/Figure6.pdf",width = 10,height = 6)
 layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
 layout[1:10,37:40] <- 3
@@ -646,7 +644,7 @@ print(shalek_resid_cor_lps,vp = vp)
 grid.text("A",x = 0.01,y = 0.95)
 grid.text("B",x = 0.01,y = 0.45)
 
-## ----figure5_png---------------------------------------------------------
+## ----figure6_png---------------------------------------------------------
 png(
   "../inst/extdata/output/Figure6.png",width = 10 * 300,height = 6 * 300,res =
   300
@@ -776,7 +774,7 @@ png(
 
 ## ----pam_resid_cor_pca_png-----------------------------------------------
   png(
-    "../inst/extdata/output/Supplementary_Figure_7.png",width = 10 * 300,height =
+  "../inst/extdata/output/Supplementary_Figure_12.png",width = 10 * 300,height =
     6 * 300,res = 300
     )
     layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)
@@ -875,7 +873,7 @@ png(
 
 ## ----pic_resid_cor_pca_png-----------------------------------------------
     png(
-      "../inst/extdata/output/Supplementary_Figure_8.png",width = 10 * 300,height =
+      "../inst/extdata/output/Supplementary_Figure_13.png",width = 10 * 300,height =
       6 * 300,res = 300
       )
       layout <- matrix(rep(c(1,2),each = 40 * 10),ncol = 40,byrow = TRUE)

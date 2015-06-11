@@ -1,0 +1,1273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0068)http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>
+Results
+</title>
+
+<script type="text/javascript">
+function toggle(item) {
+obj=document.getElementById(item);
+visible=(obj.style.display!="none")
+key=document.getElementById("ctrl_" + item);
+if (visible) {
+    obj.style.display="none";
+key.innerHTML="[+] Show genes";
+}
+else {
+obj.style.display="block";
+key.innerHTML="[-] Hide genes";
+}
+}
+</script>
+</head>
+<body>
+<p></p><center><b>
+
+</b></center><p></p>
+<table border="1" width="80%" id="tab:pval_legend" align="center">
+<caption><em>P-value color scale</em></caption>
+<tbody><tr>
+	<td width="140" align="center"> &gt; 10<sup>-3</sup></td>
+	<td width="140" align="center" bgcolor="#FFFFCC"> 10<sup>-3</sup> to 10<sup>-5</sup></td>
+	<td width="140" align="center" bgcolor="#FFCC66"> 10<sup>-5</sup> to 10<sup>-7</sup></td>
+	<td width="140" align="center" bgcolor="#FF9900"> 10<sup>-7</sup> to 10<sup>-9</sup></td>
+	<td width="140" align="center" bgcolor="#FF3300"> &lt; 10<sup>-9</sup></td>
+</tr>
+</tbody></table>
+<map name="goPathImage">
+<area shape="RECT" coords="123,765,216,827" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0071156" alt="">
+<area shape="RECT" coords="45,903,139,983" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0071158" alt="">
+<area shape="RECT" coords="1612,1393,1716,1473" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051348" alt="">
+<area shape="RECT" coords="1416,1531,1547,1629" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051444" alt="">
+<area shape="RECT" coords="2404,747,2524,845" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051603" alt="">
+<area shape="RECT" coords="2456,911,2576,974" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0010498" alt="">
+<area shape="RECT" coords="2443,1057,2589,1137" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0010499" alt="">
+<area shape="RECT" coords="1451,747,1533,845" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051248" alt="">
+<area shape="RECT" coords="1117,894,1243,991" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0032269" alt="">
+<area shape="RECT" coords="284,1221,409,1318" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#2000134" alt="">
+<area shape="RECT" coords="391,1678,524,1775" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0072431" alt="">
+<area shape="RECT" coords="2065,334,2196,397" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1901576" alt="">
+<area shape="RECT" coords="2007,618,2108,681" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0016051" alt="">
+<area shape="RECT" coords="1987,919,2128,967" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0019319" alt="">
+<area shape="RECT" coords="2079,1073,2196,1121" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006094" alt="">
+<area shape="RECT" coords="1969,214,2087,277" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044710" alt="">
+<area shape="RECT" coords="2124,463,2241,543" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044723" alt="">
+<area shape="RECT" coords="1873,334,1991,397" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044711" alt="">
+<area shape="RECT" coords="639,214,732,277" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0050789" alt="">
+<area shape="RECT" coords="1283,334,1379,397" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0019222" alt="">
+<area shape="RECT" coords="312,325,405,405" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0048518" alt="">
+<area shape="RECT" coords="525,334,608,397" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0050794" alt="">
+<area shape="RECT" coords="639,325,732,405" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0048519" alt="">
+<area shape="RECT" coords="419,1049,512,1146" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1902807" alt="">
+<area shape="RECT" coords="415,1531,553,1629" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1902400" alt="">
+<area shape="RECT" coords="1283,463,1379,543" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0009892" alt="">
+<area shape="RECT" coords="1403,463,1531,543" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0060255" alt="">
+<area shape="RECT" coords="1173,454,1259,551" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051171" alt="">
+<area shape="RECT" coords="1555,463,1637,543" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0080090" alt="">
+<area shape="RECT" coords="1048,463,1131,543" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0031323" alt="">
+<area shape="RECT" coords="1420,1066,1508,1129" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0050790" alt="">
+<area shape="RECT" coords="2111,221,2207,269" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0009058" alt="">
+<area shape="RECT" coords="536,1221,669,1318" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0030330" alt="">
+<area shape="RECT" coords="260,1824,393,1973" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006977" alt="">
+<area shape="RECT" coords="1616,1057,1712,1137" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044093" alt="">
+<area shape="RECT" coords="1008,1073,1109,1121" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1903047" alt="">
+<area shape="RECT" coords="945,1221,1079,1318" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0072413" alt="">
+<area shape="RECT" coords="851,1057,984,1137" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0072395" alt="">
+<area shape="RECT" coords="788,1229,921,1309" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0072401" alt="">
+<area shape="RECT" coords="649,1393,783,1473" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0072422" alt="">
+<area shape="RECT" coords="649,1531,783,1629" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1902402" alt="">
+<area shape="RECT" coords="493,618,584,681" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0045786" alt="">
+<area shape="RECT" coords="536,756,629,836" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0010948" alt="">
+<area shape="RECT" coords="429,756,512,836" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0045930" alt="">
+<area shape="RECT" coords="2723,772,2829,820" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006820" alt="">
+<area shape="RECT" coords="2777,919,2879,967" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0015711" alt="">
+<area shape="RECT" coords="1812,214,1945,277" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044707" alt="">
+<area shape="RECT" coords="1727,341,1849,389" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0048771" alt="">
+<area shape="RECT" coords="693,1066,827,1129" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0042770" alt="">
+<area shape="RECT" coords="1997,765,2117,827" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0046364" alt="">
+<area shape="RECT" coords="877,919,957,967" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0022402" alt="">
+<area shape="RECT" coords="163,903,277,983" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1901990" alt="">
+<area shape="RECT" coords="131,1057,256,1137" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#2000045" alt="">
+<area shape="RECT" coords="280,1049,395,1146" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1901991" alt="">
+<area shape="RECT" coords="1671,214,1788,277" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044763" alt="">
+<area shape="RECT" coords="2588,221,2665,269" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0009056" alt="">
+<area shape="RECT" coords="2535,334,2665,397" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1901575" alt="">
+<area shape="RECT" coords="1007,609,1132,689" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0010565" alt="">
+<area shape="RECT" coords="1139,747,1227,845" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006521" alt="">
+<area shape="RECT" coords="1837,102,1931,165" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0032501" alt="">
+<area shape="RECT" coords="387,618,469,681" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0007346" alt="">
+<area shape="RECT" coords="2848,341,2920,389" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006810" alt="">
+<area shape="RECT" coords="2683,479,2800,527" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044765" alt="">
+<area shape="RECT" coords="2824,479,2955,527" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0071702" alt="">
+<area shape="RECT" coords="1953,5,1841,29" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0008150" alt="">
+<area shape="RECT" coords="1693,109,1765,157" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0009987" alt="">
+<area shape="RECT" coords="2641,109,2759,157" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0002376" alt="">
+<area shape="RECT" coords="1573,109,1659,157" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0050896" alt="">
+<area shape="RECT" coords="2185,109,2268,157" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0008152" alt="">
+<area shape="RECT" coords="1964,109,2081,157" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044699" alt="">
+<area shape="RECT" coords="2532,109,2617,157" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051179" alt="">
+<area shape="RECT" coords="1469,109,1549,157" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0065007" alt="">
+<area shape="RECT" coords="1251,756,1376,836" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0032268" alt="">
+<area shape="RECT" coords="1267,903,1360,983" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0031399" alt="">
+<area shape="RECT" coords="1121,1203,1239,1335" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1903321" alt="">
+<area shape="RECT" coords="1228,1393,1327,1473" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0031397" alt="">
+<area shape="RECT" coords="807,1385,940,1482" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1902403" alt="">
+<area shape="RECT" coords="2132,618,2252,681" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0005996" alt="">
+<area shape="RECT" coords="1561,214,1647,277" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051716" alt="">
+<area shape="RECT" coords="756,334,833,397" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0033554" alt="">
+<area shape="RECT" coords="291,765,405,827" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1901987" alt="">
+<area shape="RECT" coords="469,903,584,983" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1901988" alt="">
+<area shape="RECT" coords="301,903,395,983" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1902806" alt="">
+<area shape="RECT" coords="1736,1057,1832,1137" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044092" alt="">
+<area shape="RECT" coords="1620,1229,1708,1309" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0043086" alt="">
+<area shape="RECT" coords="269,618,363,681" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0010564" alt="">
+<area shape="RECT" coords="5,756,99,836" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0090068" alt="">
+<area shape="RECT" coords="216,463,299,543" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0048522" alt="">
+<area shape="RECT" coords="651,463,733,543" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0048523" alt="">
+<area shape="RECT" coords="381,479,472,527" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051726" alt="">
+<area shape="RECT" coords="496,479,627,527" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0007165" alt="">
+<area shape="RECT" coords="2407,625,2492,673" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006508" alt="">
+<area shape="RECT" coords="2723,625,2816,673" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006811" alt="">
+<area shape="RECT" coords="1401,601,1529,698" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0010605" alt="">
+<area shape="RECT" coords="900,601,983,698" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0031324" alt="">
+<area shape="RECT" coords="1604,609,1687,689" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051246" alt="">
+<area shape="RECT" coords="709,756,827,836" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006974" alt="">
+<area shape="RECT" coords="2831,221,2937,269" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051234" alt="">
+<area shape="RECT" coords="2516,625,2636,673" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0030163" alt="">
+<area shape="RECT" coords="2141,772,2269,820" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0019318" alt="">
+<area shape="RECT" coords="2152,919,2283,967" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006006" alt="">
+<area shape="RECT" coords="1083,221,1160,269" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0006950" alt="">
+<area shape="RECT" coords="2383,214,2513,277" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0071704" alt="">
+<area shape="RECT" coords="2231,221,2359,269" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0044238" alt="">
+<area shape="RECT" coords="1133,1049,1227,1146" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0031400" alt="">
+<area shape="RECT" coords="536,1066,669,1129" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0072331" alt="">
+<area shape="RECT" coords="1505,1393,1588,1473" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051352" alt="">
+<area shape="RECT" coords="608,919,739,967" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0035556" alt="">
+<area shape="RECT" coords="1492,1238,1596,1301" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051338" alt="">
+<area shape="RECT" coords="1351,1393,1481,1473" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051438" alt="">
+<area shape="RECT" coords="1385,1238,1468,1301" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0051340" alt="">
+<area shape="RECT" coords="2536,471,2651,534" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0009057" alt="">
+<area shape="RECT" coords="2387,479,2512,527" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0019538" alt="">
+<area shape="RECT" coords="1156,609,1276,689" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0033238" alt="">
+<area shape="RECT" coords="1253,1040,1371,1155" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1903320" alt="">
+<area shape="RECT" coords="1263,1238,1361,1301" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0031396" alt="">
+<area shape="RECT" coords="2271,334,2372,397" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0005975" alt="">
+<area shape="RECT" coords="2689,221,2807,269" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#1902578" alt="">
+<area shape="RECT" coords="155,618,245,681" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0045787" alt="">
+<area shape="RECT" coords="2396,334,2511,397" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0043170" alt="">
+<area shape="RECT" coords="1736,911,1832,974" href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#0065009" alt="">
+</map>
+<p align="center"><img border="0" src="./Limma_Only_GO_Enrichment_files/GO.png" usemap="#goPathImage" alt=""></p>
+<p>&nbsp;</p>
+<table border="1" width="100%" id="table1">
+	<tbody><tr>
+		<td align="center"><b>GO term</b></td>
+		<td align="center"><b>Description</b></td>
+		<td width="120" align="center"><b><a href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#p_value_info">P-value</a></b></td> 
+		<td width="120" align="center"><b><a href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#fdr_info">FDR q-value</a></b></td> 
+		<td width="230" align="center"><b><a href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#enrich_info"> Enrichment (N, B, n, b) </a></b> </td>
+		<td align="center"><b><a href="http://cbl-gorilla.cs.technion.ac.il/GOrilla/alao926z/GOResults.html#genes_info"> Genes </a></b></td>
+	</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:2000045&view=details" target="_blank">GO:2000045</a><a name="2000045"></a></td>
+<td>regulation of G1/S transition of mitotic cell cycle</td>
+<td align="center">9.13E-5</td>
+<td align="center">8.51E-1</td>
+<td align="center">2.06 (4735,78,795,27)</td>
+<td>
+<a id="ctrl_elements_GO:2000045" href="javascript:toggle('elements_GO:2000045')">[+] Show genes</a><br>
+<div id="elements_GO:2000045" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+KANK2  -  kn motif and ankyrin repeat domains 2<br>
+RPS27A  -  ribosomal protein s27a<br>
+DDX3X  -  dead (asp-glu-ala-asp) box helicase 3, x-linked<br>
+CDC73  -  cell division cycle 73<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+RPA2  -  replication protein a2, 32kda<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+ZC3H12D  -  zinc finger ccch-type containing 12d<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+ANKRD17  -  ankyrin repeat domain 17<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ANXA1  -  annexin a1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+DGKZ  -  diacylglycerol kinase, zeta<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0033238&view=details" target="_blank">GO:0033238</a><a name="0033238"></a></td>
+<td>regulation of cellular amine metabolic process</td>
+<td align="center">1.05E-4</td>
+<td align="center">4.91E-1</td>
+<td align="center">2.34 (4735,51,795,20)</td>
+<td>
+<a id="ctrl_elements_GO:0033238" href="javascript:toggle('elements_GO:0033238')">[+] Show genes</a><br>
+<div id="elements_GO:0033238" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+OAZ1  -  ornithine decarboxylase antizyme 1<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+NR4A2  -  nuclear receptor subfamily 4, group a, member 2<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+MAOB  -  monoamine oxidase b<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PARK7  -  parkinson protein 7<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:1902807&view=details" target="_blank">GO:1902807</a><a name="1902807"></a></td>
+<td>negative regulation of cell cycle G1/S phase transition</td>
+<td align="center">1.21E-4</td>
+<td align="center">3.76E-1</td>
+<td align="center">2.13 (4735,67,795,24)</td>
+<td>
+<a id="ctrl_elements_GO:1902807" href="javascript:toggle('elements_GO:1902807')">[+] Show genes</a><br>
+<div id="elements_GO:1902807" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+KANK2  -  kn motif and ankyrin repeat domains 2<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+ZC3H12D  -  zinc finger ccch-type containing 12d<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+CDC73  -  cell division cycle 73<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+DGKZ  -  diacylglycerol kinase, zeta<br>
+RPA2  -  replication protein a2, 32kda<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:2000134&view=details" target="_blank">GO:2000134</a><a name="2000134"></a></td>
+<td>negative regulation of G1/S transition of mitotic cell cycle</td>
+<td align="center">1.21E-4</td>
+<td align="center">2.82E-1</td>
+<td align="center">2.13 (4735,67,795,24)</td>
+<td>
+<a id="ctrl_elements_GO:2000134" href="javascript:toggle('elements_GO:2000134')">[+] Show genes</a><br>
+<div id="elements_GO:2000134" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+KANK2  -  kn motif and ankyrin repeat domains 2<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+ZC3H12D  -  zinc finger ccch-type containing 12d<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+CDC73  -  cell division cycle 73<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+DGKZ  -  diacylglycerol kinase, zeta<br>
+RPA2  -  replication protein a2, 32kda<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:1902806&view=details" target="_blank">GO:1902806</a><a name="1902806"></a></td>
+<td>regulation of cell cycle G1/S phase transition</td>
+<td align="center">1.89E-4</td>
+<td align="center">3.52E-1</td>
+<td align="center">1.99 (4735,81,795,27)</td>
+<td>
+<a id="ctrl_elements_GO:1902806" href="javascript:toggle('elements_GO:1902806')">[+] Show genes</a><br>
+<div id="elements_GO:1902806" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+KANK2  -  kn motif and ankyrin repeat domains 2<br>
+RPS27A  -  ribosomal protein s27a<br>
+DDX3X  -  dead (asp-glu-ala-asp) box helicase 3, x-linked<br>
+CDC73  -  cell division cycle 73<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+RPA2  -  replication protein a2, 32kda<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+ZC3H12D  -  zinc finger ccch-type containing 12d<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+ANKRD17  -  ankyrin repeat domain 17<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ANXA1  -  annexin a1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+DGKZ  -  diacylglycerol kinase, zeta<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0002376&view=details" target="_blank">GO:0002376</a><a name="0002376"></a></td>
+<td>immune system process</td>
+<td align="center">2.17E-4</td>
+<td align="center">3.37E-1</td>
+<td align="center">1.32 (4735,583,795,129)</td>
+<td>
+<a id="ctrl_elements_GO:0002376" href="javascript:toggle('elements_GO:0002376')">[+] Show genes</a><br>
+<div id="elements_GO:0002376" style="display:none"> <font size="1">
+IFITM1  -  interferon induced transmembrane protein 1<br>
+DDX3X  -  dead (asp-glu-ala-asp) box helicase 3, x-linked<br>
+IL16  -  interleukin 16<br>
+F11R  -  f11 receptor<br>
+THEM4  -  thioesterase superfamily member 4<br>
+BRK1  -  brick1, scar/wave actin-nucleating complex subunit<br>
+LIMK1  -  lim domain kinase 1<br>
+MLH1  -  mutl homolog 1, colon cancer, nonpolyposis type 2 (e. coli)<br>
+ACE  -  angiotensin i converting enzyme<br>
+REL  -  v-rel avian reticuloendotheliosis viral oncogene homolog<br>
+TRIM26  -  tripartite motif containing 26<br>
+LGALS3  -  lectin, galactoside-binding, soluble, 3<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+ILF2  -  interleukin enhancer binding factor 2<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+CEACAM1  -  carcinoembryonic antigen-related cell adhesion molecule 1 (biliary glycoprotein)<br>
+HSH2D  -  hematopoietic sh2 domain containing<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+CCL5  -  chemokine (c-c motif) ligand 5<br>
+IL26  -  interleukin 26<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+SLAMF7  -  slam family member 7<br>
+TLR6  -  toll-like receptor 6<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+AIMP1  -  aminoacyl trna synthetase complex-interacting multifunctional protein 1<br>
+ARF1  -  adp-ribosylation factor 1<br>
+CD84  -  cd84 molecule<br>
+POLM  -  polymerase (dna directed), mu<br>
+LILRA5  -  leukocyte immunoglobulin-like receptor, subfamily a (with tm domain), member 5<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+FKBP1A  -  fk506 binding protein 1a, 12kda<br>
+ABCB5  -  atp-binding cassette, sub-family b (mdr/tap), member 5<br>
+IL10  -  interleukin 10<br>
+OTUB1  -  otu domain, ubiquitin aldehyde binding 1<br>
+GZMH  -  granzyme h (cathepsin g-like 2, protein h-ccpx)<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PRDX1  -  peroxiredoxin 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+JAGN1  -  jagunal homolog 1 (drosophila)<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+IL7R  -  interleukin 7 receptor<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+CD28  -  cd28 molecule<br>
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+TXLNA  -  taxilin alpha<br>
+NUGGC  -  nuclear gtpase, germinal center associated<br>
+KLB  -  klotho beta<br>
+ISG20  -  interferon stimulated exonuclease gene 20kda<br>
+SQSTM1  -  sequestosome 1<br>
+ITGB5  -  integrin, beta 5<br>
+ICOS  -  inducible t-cell co-stimulator<br>
+PECAM1  -  platelet/endothelial cell adhesion molecule 1<br>
+CLNK  -  cytokine-dependent hematopoietic cell linker<br>
+IPO7  -  importin 7<br>
+PTK6  -  protein tyrosine kinase 6<br>
+CDK6  -  cyclin-dependent kinase 6<br>
+TLR10  -  toll-like receptor 10<br>
+OTUD7B  -  otu domain containing 7b<br>
+SLC7A11  -  solute carrier family 7 (anionic amino acid transporter light chain, xc- system), member 11<br>
+HSP90AB1  -  heat shock protein 90kda alpha (cytosolic), class b member 1<br>
+IFITM2  -  interferon induced transmembrane protein 2<br>
+POU2AF1  -  pou class 2 associating factor 1<br>
+SPEF2  -  sperm flagellar 2<br>
+NLRC3  -  nlr family, card domain containing 3<br>
+TCF7  -  transcription factor 7 (t-cell specific, hmg-box)<br>
+ARPC1A  -  actin related protein 2/3 complex, subunit 1a, 41kda<br>
+IRF1  -  interferon regulatory factor 1<br>
+MS4A2  -  membrane-spanning 4-domains, subfamily a, member 2<br>
+KLF6  -  kruppel-like factor 6<br>
+HSP90B1  -  heat shock protein 90kda beta (grp94), member 1<br>
+IRF4  -  interferon regulatory factor 4<br>
+LAIR1  -  leukocyte-associated immunoglobulin-like receptor 1<br>
+BCAP31  -  b-cell receptor-associated protein 31<br>
+CAPZA1  -  capping protein (actin filament) muscle z-line, alpha 1<br>
+CFI  -  complement factor i<br>
+PLEKHA1  -  pleckstrin homology domain containing, family a (phosphoinositide binding specific) member 1<br>
+SYK  -  spleen tyrosine kinase<br>
+DPP4  -  dipeptidyl-peptidase 4<br>
+SLC11A1  -  solute carrier family 11 (proton-coupled divalent metal ion transporter), member 1<br>
+CASP10  -  caspase 10, apoptosis-related cysteine peptidase<br>
+ENAH  -  enabled homolog (drosophila)<br>
+ATM  -  ataxia telangiectasia mutated<br>
+GPLD1  -  glycosylphosphatidylinositol specific phospholipase d1<br>
+FTH1  -  ferritin, heavy polypeptide 1<br>
+TANK  -  traf family member-associated nfkb activator<br>
+MICA  -  mhc class i polypeptide-related sequence a<br>
+RAB6A  -  rab6a, member ras oncogene family<br>
+ATP7A  -  atpase, cu++ transporting, alpha polypeptide<br>
+TMIGD2  -  transmembrane and immunoglobulin domain containing 2<br>
+XRCC6  -  x-ray repair complementing defective repair in chinese hamster cells 6<br>
+CALR  -  calreticulin<br>
+ANKRD17  -  ankyrin repeat domain 17<br>
+CD24  -  cd24 molecule<br>
+CFP  -  complement factor properdin<br>
+TINAGL1  -  tubulointerstitial nephritis antigen-like 1<br>
+HIF1A  -  hypoxia inducible factor 1, alpha subunit (basic helix-loop-helix transcription factor)<br>
+AP1S3  -  adaptor-related protein complex 1, sigma 3 subunit<br>
+CRIP1  -  cysteine-rich protein 1 (intestinal)<br>
+FFAR2  -  free fatty acid receptor 2<br>
+MSH2  -  muts homolog 2, colon cancer, nonpolyposis type 1 (e. coli)<br>
+RPS27A  -  ribosomal protein s27a<br>
+RBPJ  -  recombination signal binding protein for immunoglobulin kappa j region<br>
+EREG  -  epiregulin<br>
+STAT1  -  signal transducer and activator of transcription 1, 91kda<br>
+UBE2A  -  ubiquitin-conjugating enzyme e2a<br>
+RPS19  -  ribosomal protein s19<br>
+PIK3R1  -  phosphoinositide-3-kinase, regulatory subunit 1 (alpha)<br>
+CD8B  -  cd8b molecule<br>
+TXK  -  txk tyrosine kinase<br>
+OSBPL1A  -  oxysterol binding protein-like 1a<br>
+TNFSF14  -  tumor necrosis factor (ligand) superfamily, member 14<br>
+GP6  -  glycoprotein vi (platelet)<br>
+TGFB2  -  transforming growth factor, beta 2<br>
+TROVE2  -  trove domain family, member 2<br>
+CTNNBL1  -  catenin, beta like 1<br>
+PELI1  -  pellino e3 ubiquitin protein ligase 1<br>
+AP2M1  -  adaptor-related protein complex 2, mu 1 subunit<br>
+GBP2  -  guanylate binding protein 2, interferon-inducible<br>
+YES1  -  v-yes-1 yamaguchi sarcoma viral oncogene homolog 1<br>
+LAMP3  -  lysosomal-associated membrane protein 3<br>
+ANXA1  -  annexin a1<br>
+ERBB3  -  v-erb-b2 avian erythroblastic leukemia viral oncogene homolog 3<br>
+ANGPT2  -  angiopoietin 2<br>
+UBE2N  -  ubiquitin-conjugating enzyme e2n<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0071158&view=details" target="_blank">GO:0071158</a><a name="0071158"></a></td>
+<td>positive regulation of cell cycle arrest</td>
+<td align="center">2.68E-4</td>
+<td align="center">3.58E-1</td>
+<td align="center">2.16 (4735,58,795,21)</td>
+<td>
+<a id="ctrl_elements_GO:0071158" href="javascript:toggle('elements_GO:0071158')">[+] Show genes</a><br>
+<div id="elements_GO:0071158" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+BRCA1  -  breast cancer 1, early onset<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+HMGA2  -  high mobility group at-hook 2<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0030330&view=details" target="_blank">GO:0030330</a><a name="0030330"></a></td>
+<td>DNA damage response, signal transduction by p53 class mediator</td>
+<td align="center">3.5E-4</td>
+<td align="center">4.08E-1</td>
+<td align="center">2.08 (4735,63,795,22)</td>
+<td>
+<a id="ctrl_elements_GO:0030330" href="javascript:toggle('elements_GO:0030330')">[+] Show genes</a><br>
+<div id="elements_GO:0030330" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+HIPK2  -  homeodomain interacting protein kinase 2<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+BRCA1  -  breast cancer 1, early onset<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+SP100  -  sp100 nuclear antigen<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0048771&view=details" target="_blank">GO:0048771</a><a name="0048771"></a></td>
+<td>tissue remodeling</td>
+<td align="center">3.56E-4</td>
+<td align="center">3.68E-1</td>
+<td align="center">3.67 (4735,13,795,8)</td>
+<td>
+<a id="ctrl_elements_GO:0048771" href="javascript:toggle('elements_GO:0048771')">[+] Show genes</a><br>
+<div id="elements_GO:0048771" style="display:none"> <font size="1">
+ACE  -  angiotensin i converting enzyme<br>
+TGFB2  -  transforming growth factor, beta 2<br>
+ATP7A  -  atpase, cu++ transporting, alpha polypeptide<br>
+ANXA1  -  annexin a1<br>
+RBPJ  -  recombination signal binding protein for immunoglobulin kappa j region<br>
+NOS3  -  nitric oxide synthase 3 (endothelial cell)<br>
+F2R  -  coagulation factor ii (thrombin) receptor<br>
+HIF1A  -  hypoxia inducible factor 1, alpha subunit (basic helix-loop-helix transcription factor)<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0045787&view=details" target="_blank">GO:0045787</a><a name="0045787"></a></td>
+<td>positive regulation of cell cycle</td>
+<td align="center">4.08E-4</td>
+<td align="center">3.8E-1</td>
+<td align="center">1.73 (4735,124,795,36)</td>
+<td>
+<a id="ctrl_elements_GO:0045787" href="javascript:toggle('elements_GO:0045787')">[+] Show genes</a><br>
+<div id="elements_GO:0045787" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+RPS27A  -  ribosomal protein s27a<br>
+EPGN  -  epithelial mitogen<br>
+DDX3X  -  dead (asp-glu-ala-asp) box helicase 3, x-linked<br>
+EREG  -  epiregulin<br>
+SLC6A4  -  solute carrier family 6 (neurotransmitter transporter), member 4<br>
+BRCA1  -  breast cancer 1, early onset<br>
+RHOA  -  ras homolog family member a<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+HMGA2  -  high mobility group at-hook 2<br>
+ASNS  -  asparagine synthetase (glutamine-hydrolyzing)<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+TGFB2  -  transforming growth factor, beta 2<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+EIF4EBP1  -  eukaryotic translation initiation factor 4e binding protein 1<br>
+RAB11A  -  rab11a, member ras oncogene family<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PIWIL2  -  piwi-like rna-mediated gene silencing 2<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+RBM38  -  rna binding motif protein 38<br>
+CALR  -  calreticulin<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+CCND2  -  cyclin d2<br>
+ANKRD17  -  ankyrin repeat domain 17<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ANXA1  -  annexin a1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+CD28  -  cd28 molecule<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0006521&view=details" target="_blank">GO:0006521</a><a name="0006521"></a></td>
+<td>regulation of cellular amino acid metabolic process</td>
+<td align="center">4.45E-4</td>
+<td align="center">3.77E-1</td>
+<td align="center">2.23 (4735,48,795,18)</td>
+<td>
+<a id="ctrl_elements_GO:0006521" href="javascript:toggle('elements_GO:0006521')">[+] Show genes</a><br>
+<div id="elements_GO:0006521" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+OAZ1  -  ornithine decarboxylase antizyme 1<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PARK7  -  parkinson protein 7<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0071156&view=details" target="_blank">GO:0071156</a><a name="0071156"></a></td>
+<td>regulation of cell cycle arrest</td>
+<td align="center">4.51E-4</td>
+<td align="center">3.5E-1</td>
+<td align="center">2.05 (4735,64,795,22)</td>
+<td>
+<a id="ctrl_elements_GO:0071156" href="javascript:toggle('elements_GO:0071156')">[+] Show genes</a><br>
+<div id="elements_GO:0071156" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+BRCA1  -  breast cancer 1, early onset<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+MLXIPL  -  mlx interacting protein-like<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+HMGA2  -  high mobility group at-hook 2<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0015711&view=details" target="_blank">GO:0015711</a><a name="0015711"></a></td>
+<td>organic anion transport</td>
+<td align="center">5.1E-4</td>
+<td align="center">3.65E-1</td>
+<td align="center">1.93 (4735,77,795,25)</td>
+<td>
+<a id="ctrl_elements_GO:0015711" href="javascript:toggle('elements_GO:0015711')">[+] Show genes</a><br>
+<div id="elements_GO:0015711" style="display:none"> <font size="1">
+SLC52A1  -  solute carrier family 52 (riboflavin transporter), member 1<br>
+SLC27A1  -  solute carrier family 27 (fatty acid transporter), member 1<br>
+PQLC2  -  pq loop repeat containing 2<br>
+SFXN5  -  sideroflexin 5<br>
+SLC7A1  -  solute carrier family 7 (cationic amino acid transporter, y+ system), member 1<br>
+SLC16A4  -  solute carrier family 16, member 4<br>
+SLC11A1  -  solute carrier family 11 (proton-coupled divalent metal ion transporter), member 1<br>
+ACE  -  angiotensin i converting enzyme<br>
+SLC22A9  -  solute carrier family 22 (organic anion transporter), member 9<br>
+SLC25A15  -  solute carrier family 25 (mitochondrial carrier; ornithine transporter) member 15<br>
+SLC7A14  -  solute carrier family 7, member 14<br>
+SLC35B1  -  solute carrier family 35, member b1<br>
+PITPNB  -  phosphatidylinositol transfer protein, beta<br>
+SLC7A11  -  solute carrier family 7 (anionic amino acid transporter light chain, xc- system), member 11<br>
+SLC1A5  -  solute carrier family 1 (neutral amino acid transporter), member 5<br>
+SLC25A42  -  solute carrier family 25, member 42<br>
+SLC1A6  -  solute carrier family 1 (high affinity aspartate/glutamate transporter), member 6<br>
+SLC17A5  -  solute carrier family 17 (acidic sugar transporter), member 5<br>
+SLC13A5  -  solute carrier family 13 (sodium-dependent citrate transporter), member 5<br>
+SLC7A5P2  -  solute carrier family 7 (amino acid transporter light chain, l system), member 5 pseudogene 2<br>
+ANXA1  -  annexin a1<br>
+SLC4A8  -  solute carrier family 4, sodium bicarbonate cotransporter, member 8<br>
+ATP8B3  -  atpase, aminophospholipid transporter, class i, type 8b, member 3<br>
+ABCC3  -  atp-binding cassette, sub-family c (cftr/mrp), member 3<br>
+SLMO2  -  slowmo homolog 2 (drosophila)<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0051352&view=details" target="_blank">GO:0051352</a><a name="0051352"></a></td>
+<td>negative regulation of ligase activity</td>
+<td align="center">6E-4</td>
+<td align="center">4E-1</td>
+<td align="center">2.09 (4735,57,795,20)</td>
+<td>
+<a id="ctrl_elements_GO:0051352" href="javascript:toggle('elements_GO:0051352')">[+] Show genes</a><br>
+<div id="elements_GO:0051352" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+LIMK1  -  lim domain kinase 1<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PARK7  -  parkinson protein 7<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0051444&view=details" target="_blank">GO:0051444</a><a name="0051444"></a></td>
+<td>negative regulation of ubiquitin-protein transferase activity</td>
+<td align="center">6E-4</td>
+<td align="center">3.73E-1</td>
+<td align="center">2.09 (4735,57,795,20)</td>
+<td>
+<a id="ctrl_elements_GO:0051444" href="javascript:toggle('elements_GO:0051444')">[+] Show genes</a><br>
+<div id="elements_GO:0051444" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+LIMK1  -  lim domain kinase 1<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PARK7  -  parkinson protein 7<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0006977&view=details" target="_blank">GO:0006977</a><a name="0006977"></a></td>
+<td>DNA damage response, signal transduction by p53 class mediator resulting in cell cycle arrest</td>
+<td align="center">6.02E-4</td>
+<td align="center">3.51E-1</td>
+<td align="center">2.14 (4735,53,795,19)</td>
+<td>
+<a id="ctrl_elements_GO:0006977" href="javascript:toggle('elements_GO:0006977')">[+] Show genes</a><br>
+<div id="elements_GO:0006977" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0010499&view=details" target="_blank">GO:0010499</a><a name="0010499"></a></td>
+<td>proteasomal ubiquitin-independent protein catabolic process</td>
+<td align="center">6.84E-4</td>
+<td align="center">3.75E-1</td>
+<td align="center">3.15 (4735,17,795,9)</td>
+<td>
+<a id="ctrl_elements_GO:0010499" href="javascript:toggle('elements_GO:0010499')">[+] Show genes</a><br>
+<div id="elements_GO:0010499" style="display:none"> <font size="1">
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0006094&view=details" target="_blank">GO:0006094</a><a name="0006094"></a></td>
+<td>gluconeogenesis</td>
+<td align="center">7.08E-4</td>
+<td align="center">3.67E-1</td>
+<td align="center">3.40 (4735,14,795,8)</td>
+<td>
+<a id="ctrl_elements_GO:0006094" href="javascript:toggle('elements_GO:0006094')">[+] Show genes</a><br>
+<div id="elements_GO:0006094" style="display:none"> <font size="1">
+TPI1  -  triosephosphate isomerase 1<br>
+PGAM1  -  phosphoglycerate mutase 1 (brain)<br>
+MDH2  -  malate dehydrogenase 2, nad (mitochondrial)<br>
+MDH1  -  malate dehydrogenase 1, nad (soluble)<br>
+G6PC3  -  glucose 6 phosphatase, catalytic, 3<br>
+G6PC  -  glucose-6-phosphatase, catalytic subunit<br>
+GOT1  -  glutamic-oxaloacetic transaminase 1, soluble<br>
+ALDOA  -  aldolase a, fructose-bisphosphate<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0051438&view=details" target="_blank">GO:0051438</a><a name="0051438"></a></td>
+<td>regulation of ubiquitin-protein transferase activity</td>
+<td align="center">7.3E-4</td>
+<td align="center">3.58E-1</td>
+<td align="center">1.99 (4735,66,795,22)</td>
+<td>
+<a id="ctrl_elements_GO:0051438" href="javascript:toggle('elements_GO:0051438')">[+] Show genes</a><br>
+<div id="elements_GO:0051438" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+LIMK1  -  lim domain kinase 1<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PARK7  -  parkinson protein 7<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+ZYG11A  -  zyg-11 family member a, cell cycle regulator<br>
+UBE2N  -  ubiquitin-conjugating enzyme e2n<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:1902400&view=details" target="_blank">GO:1902400</a><a name="1902400"></a></td>
+<td>intracellular signal transduction involved in G1 DNA damage checkpoint</td>
+<td align="center">7.86E-4</td>
+<td align="center">3.66E-1</td>
+<td align="center">2.10 (4735,54,795,19)</td>
+<td>
+<a id="ctrl_elements_GO:1902400" href="javascript:toggle('elements_GO:1902400')">[+] Show genes</a><br>
+<div id="elements_GO:1902400" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:1902403&view=details" target="_blank">GO:1902403</a><a name="1902403"></a></td>
+<td>signal transduction involved in mitotic DNA integrity checkpoint</td>
+<td align="center">7.86E-4</td>
+<td align="center">3.49E-1</td>
+<td align="center">2.10 (4735,54,795,19)</td>
+<td>
+<a id="ctrl_elements_GO:1902403" href="javascript:toggle('elements_GO:1902403')">[+] Show genes</a><br>
+<div id="elements_GO:1902403" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:1902402&view=details" target="_blank">GO:1902402</a><a name="1902402"></a></td>
+<td>signal transduction involved in mitotic DNA damage checkpoint</td>
+<td align="center">7.86E-4</td>
+<td align="center">3.33E-1</td>
+<td align="center">2.10 (4735,54,795,19)</td>
+<td>
+<a id="ctrl_elements_GO:1902402" href="javascript:toggle('elements_GO:1902402')">[+] Show genes</a><br>
+<div id="elements_GO:1902402" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0072431&view=details" target="_blank">GO:0072431</a><a name="0072431"></a></td>
+<td>signal transduction involved in mitotic G1 DNA damage checkpoint</td>
+<td align="center">7.86E-4</td>
+<td align="center">3.19E-1</td>
+<td align="center">2.10 (4735,54,795,19)</td>
+<td>
+<a id="ctrl_elements_GO:0072431" href="javascript:toggle('elements_GO:0072431')">[+] Show genes</a><br>
+<div id="elements_GO:0072431" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0072413&view=details" target="_blank">GO:0072413</a><a name="0072413"></a></td>
+<td>signal transduction involved in mitotic cell cycle checkpoint</td>
+<td align="center">7.86E-4</td>
+<td align="center">3.05E-1</td>
+<td align="center">2.10 (4735,54,795,19)</td>
+<td>
+<a id="ctrl_elements_GO:0072413" href="javascript:toggle('elements_GO:0072413')">[+] Show genes</a><br>
+<div id="elements_GO:0072413" style="display:none"> <font size="1">
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+RPS27A  -  ribosomal protein s27a<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+RBM38  -  rna binding motif protein 38<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+ATM  -  ataxia telangiectasia mutated<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0044093&view=details" target="_blank">GO:0044093</a><a name="0044093"></a></td>
+<td>positive regulation of molecular function</td>
+<td align="center">9.14E-4</td>
+<td align="center">3.41E-1</td>
+<td align="center">1.32 (4735,480,795,106)</td>
+<td>
+<a id="ctrl_elements_GO:0044093" href="javascript:toggle('elements_GO:0044093')">[+] Show genes</a><br>
+<div id="elements_GO:0044093" style="display:none"> <font size="1">
+TBC1D20  -  tbc1 domain family, member 20<br>
+SLC27A1  -  solute carrier family 27 (fatty acid transporter), member 1<br>
+S1PR2  -  sphingosine-1-phosphate receptor 2<br>
+DDX3X  -  dead (asp-glu-ala-asp) box helicase 3, x-linked<br>
+ARHGEF39  -  rho guanine nucleotide exchange factor (gef) 39<br>
+ARHGEF10L  -  rho guanine nucleotide exchange factor (gef) 10-like<br>
+F11R  -  f11 receptor<br>
+RABGAP1  -  rab gtpase activating protein 1<br>
+IQGAP1  -  iq motif containing gtpase activating protein 1<br>
+MAP3K9  -  mitogen-activated protein kinase kinase kinase 9<br>
+CYTH1  -  cytohesin 1<br>
+ACE  -  angiotensin i converting enzyme<br>
+TRIM26  -  tripartite motif containing 26<br>
+PSMA1  -  proteasome (prosome, macropain) subunit, alpha type, 1<br>
+PSMA2  -  proteasome (prosome, macropain) subunit, alpha type, 2<br>
+GTF2A2  -  general transcription factor iia, 2, 12kda<br>
+SP100  -  sp100 nuclear antigen<br>
+TBC1D8B  -  tbc1 domain family, member 8b (with gram domain)<br>
+PSMB1  -  proteasome (prosome, macropain) subunit, beta type, 1<br>
+PSMA5  -  proteasome (prosome, macropain) subunit, alpha type, 5<br>
+PSMA4  -  proteasome (prosome, macropain) subunit, alpha type, 4<br>
+PSMA3  -  proteasome (prosome, macropain) subunit, alpha type, 3<br>
+CCL5  -  chemokine (c-c motif) ligand 5<br>
+PSMB9  -  proteasome (prosome, macropain) subunit, beta type, 9<br>
+TLR6  -  toll-like receptor 6<br>
+SLX4  -  slx4 structure-specific endonuclease subunit<br>
+PSMB8  -  proteasome (prosome, macropain) subunit, beta type, 8<br>
+PSMB4  -  proteasome (prosome, macropain) subunit, beta type, 4<br>
+FKBP1A  -  fk506 binding protein 1a, 12kda<br>
+PSMD1  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 1<br>
+IL10  -  interleukin 10<br>
+PSMC1  -  proteasome (prosome, macropain) 26s subunit, atpase, 1<br>
+RGS3  -  regulator of g-protein signaling 3<br>
+PSMC2  -  proteasome (prosome, macropain) 26s subunit, atpase, 2<br>
+PSMD8  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 8<br>
+AMBRA1  -  autophagy/beclin-1 regulator 1<br>
+PSMD4  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 4<br>
+LLGL1  -  lethal giant larvae homolog 1 (drosophila)<br>
+PRDX3  -  peroxiredoxin 3<br>
+PSMD14  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 14<br>
+PPARGC1B  -  peroxisome proliferator-activated receptor gamma, coactivator 1 beta<br>
+PSMD11  -  proteasome (prosome, macropain) 26s subunit, non-atpase, 11<br>
+EPGN  -  epithelial mitogen<br>
+ARL1  -  adp-ribosylation factor-like 1<br>
+LAMTOR5  -  late endosomal/lysosomal adaptor, mapk and mtor activator 5<br>
+RHOA  -  ras homolog family member a<br>
+NR4A2  -  nuclear receptor subfamily 4, group a, member 2<br>
+USP33  -  ubiquitin specific peptidase 33<br>
+RALGPS2  -  ral gef with ph domain and sh3 binding motif 2<br>
+TBXA2R  -  thromboxane a2 receptor<br>
+MAP3K13  -  mitogen-activated protein kinase kinase kinase 13<br>
+SYDE2  -  synapse defective 1, rho gtpase, homolog 2 (c. elegans)<br>
+HSPE1  -  heat shock 10kda protein 1 (chaperonin 10)<br>
+GNAL  -  guanine nucleotide binding protein (g protein), alpha activating activity polypeptide, olfactory type<br>
+PDCD5  -  programmed cell death 5<br>
+MS4A2  -  membrane-spanning 4-domains, subfamily a, member 2<br>
+IRF4  -  interferon regulatory factor 4<br>
+BCAP31  -  b-cell receptor-associated protein 31<br>
+ADRA1A  -  adrenoceptor alpha 1a<br>
+NOS1  -  nitric oxide synthase 1 (neuronal)<br>
+SYK  -  spleen tyrosine kinase<br>
+RNF207  -  ring finger protein 207<br>
+CAMK1D  -  calcium/calmodulin-dependent protein kinase id<br>
+NME1  -  nme/nm23 nucleoside diphosphate kinase 1<br>
+RQCD1  -  rcd1 required for cell differentiation1 homolog (s. pombe)<br>
+ARHGAP28  -  rho gtpase activating protein 28<br>
+SLC11A1  -  solute carrier family 11 (proton-coupled divalent metal ion transporter), member 1<br>
+CASP10  -  caspase 10, apoptosis-related cysteine peptidase<br>
+WNT7B  -  wingless-type mmtv integration site family, member 7b<br>
+DSTYK  -  dual serine/threonine and tyrosine protein kinase<br>
+WNT9B  -  wingless-type mmtv integration site family, member 9b<br>
+DNAJC24  -  dnaj (hsp40) homolog, subfamily c, member 24<br>
+GPLD1  -  glycosylphosphatidylinositol specific phospholipase d1<br>
+NOS3  -  nitric oxide synthase 3 (endothelial cell)<br>
+RASGRP3  -  ras guanyl releasing protein 3 (calcium and dag-regulated)<br>
+CAPRIN2  -  caprin family member 2<br>
+SRA1  -  steroid receptor rna activator 1<br>
+ATP7A  -  atpase, cu++ transporting, alpha polypeptide<br>
+RASGRP4  -  ras guanyl releasing protein 4<br>
+EVI5L  -  ecotropic viral integration site 5-like<br>
+CD24  -  cd24 molecule<br>
+HIP1  -  huntingtin interacting protein 1<br>
+F2R  -  coagulation factor ii (thrombin) receptor<br>
+VCP  -  valosin containing protein<br>
+F3  -  coagulation factor iii (thromboplastin, tissue factor)<br>
+HIF1A  -  hypoxia inducible factor 1, alpha subunit (basic helix-loop-helix transcription factor)<br>
+MSH2  -  muts homolog 2, colon cancer, nonpolyposis type 1 (e. coli)<br>
+RAN  -  ran, member ras oncogene family<br>
+RPS27A  -  ribosomal protein s27a<br>
+HIPK2  -  homeodomain interacting protein kinase 2<br>
+EDF1  -  endothelial differentiation-related factor 1<br>
+EREG  -  epiregulin<br>
+RALGPS1  -  ral gef with ph domain and sh3 binding motif 1<br>
+TXK  -  txk tyrosine kinase<br>
+ADRM1  -  adhesion regulating molecule 1<br>
+FXN  -  frataxin<br>
+HMGA2  -  high mobility group at-hook 2<br>
+TGFB2  -  transforming growth factor, beta 2<br>
+HMHA1  -  histocompatibility (minor) ha-1<br>
+ANXA2  -  annexin a2<br>
+CCND2  -  cyclin d2<br>
+RGS11  -  regulator of g-protein signaling 11<br>
+ERBB3  -  v-erb-b2 avian erythroblastic leukemia viral oncogene homolog 3<br>
+PARK7  -  parkinson protein 7<br>
+UBE2N  -  ubiquitin-conjugating enzyme e2n<br>
+DENND6A  -  denn/madd domain containing 6a<br>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><a href="http://www.godatabase.org/cgi-bin/amigo/go.cgi?query=GO:0006811&view=details" target="_blank">GO:0006811</a><a name="0006811"></a></td>
+<td>ion transport</td>
+<td align="center">9.99E-4</td>
+<td align="center">3.58E-1</td>
+<td align="center">1.41 (4735,295,795,70)</td>
+<td>
+<a id="ctrl_elements_GO:0006811" href="javascript:toggle('elements_GO:0006811')">[+] Show genes</a><br>
+<div id="elements_GO:0006811" style="display:none"> <font size="1">
+SLC52A1  -  solute carrier family 52 (riboflavin transporter), member 1<br>
+SLC27A1  -  solute carrier family 27 (fatty acid transporter), member 1<br>
+ATP6V1F  -  atpase, h+ transporting, lysosomal 14kda, v1 subunit f<br>
+PQLC2  -  pq loop repeat containing 2<br>
+SYK  -  spleen tyrosine kinase<br>
+SLC6A4  -  solute carrier family 6 (neurotransmitter transporter), member 4<br>
+SFXN5  -  sideroflexin 5<br>
+CHRNA5  -  cholinergic receptor, nicotinic, alpha 5 (neuronal)<br>
+SCN11A  -  sodium channel, voltage-gated, type xi, alpha subunit<br>
+SLC7A1  -  solute carrier family 7 (cationic amino acid transporter, y+ system), member 1<br>
+TTYH1  -  tweety homolog 1 (drosophila)<br>
+SLC16A4  -  solute carrier family 16, member 4<br>
+SLC11A1  -  solute carrier family 11 (proton-coupled divalent metal ion transporter), member 1<br>
+CACNG8  -  calcium channel, voltage-dependent, gamma subunit 8<br>
+ACE  -  angiotensin i converting enzyme<br>
+SLC25A15  -  solute carrier family 25 (mitochondrial carrier; ornithine transporter) member 15<br>
+FTH1  -  ferritin, heavy polypeptide 1<br>
+COX7A2  -  cytochrome c oxidase subunit viia polypeptide 2 (liver)<br>
+SLC7A14  -  solute carrier family 7, member 14<br>
+TMC5  -  transmembrane channel-like 5<br>
+COMMD3  -  comm domain containing 3<br>
+PITPNB  -  phosphatidylinositol transfer protein, beta<br>
+ATP6V0B  -  atpase, h+ transporting, lysosomal 21kda, v0 subunit b<br>
+ATP7A  -  atpase, cu++ transporting, alpha polypeptide<br>
+SLC1A5  -  solute carrier family 1 (neutral amino acid transporter), member 5<br>
+CCL5  -  chemokine (c-c motif) ligand 5<br>
+SLC1A6  -  solute carrier family 1 (high affinity aspartate/glutamate transporter), member 6<br>
+ATP5J  -  atp synthase, h+ transporting, mitochondrial fo complex, subunit f6<br>
+CACNA2D3  -  calcium channel, voltage-dependent, alpha 2/delta subunit 3<br>
+ATP6V1B2  -  atpase, h+ transporting, lysosomal 56/58kda, v1 subunit b2<br>
+SLC13A5  -  solute carrier family 13 (sodium-dependent citrate transporter), member 5<br>
+FKBP1A  -  fk506 binding protein 1a, 12kda<br>
+SLC7A5P2  -  solute carrier family 7 (amino acid transporter light chain, l system), member 5 pseudogene 2<br>
+ATP5G1  -  atp synthase, h+ transporting, mitochondrial fo complex, subunit c1 (subunit 9)<br>
+SLC2A3  -  solute carrier family 2 (facilitated glucose transporter), member 3<br>
+ATP5F1  -  atp synthase, h+ transporting, mitochondrial fo complex, subunit b1<br>
+ATP5G3  -  atp synthase, h+ transporting, mitochondrial fo complex, subunit c3 (subunit 9)<br>
+SLC5A5  -  solute carrier family 5 (sodium/iodide cotransporter), member 5<br>
+F2R  -  coagulation factor ii (thrombin) receptor<br>
+ABCC3  -  atp-binding cassette, sub-family c (cftr/mrp), member 3<br>
+TRPM3  -  transient receptor potential cation channel, subfamily m, member 3<br>
+ATP5A1  -  atp synthase, h+ transporting, mitochondrial f1 complex, alpha subunit 1, cardiac muscle<br>
+GJC1  -  gap junction protein, gamma 1, 45kda<br>
+ATP5B  -  atp synthase, h+ transporting, mitochondrial f1 complex, beta polypeptide<br>
+RHD  -  rh blood group, d antigen<br>
+SLMO2  -  slowmo homolog 2 (drosophila)<br>
+VDAC3  -  voltage-dependent anion channel 3<br>
+RPS27A  -  ribosomal protein s27a<br>
+COX17  -  cox17 cytochrome c oxidase copper chaperone<br>
+SLC22A23  -  solute carrier family 22, member 23<br>
+SLC12A8  -  solute carrier family 12, member 8<br>
+SLC22A9  -  solute carrier family 22 (organic anion transporter), member 9<br>
+FXN  -  frataxin<br>
+SLC35B1  -  solute carrier family 35, member b1<br>
+SLC44A2  -  solute carrier family 44 (choline transporter), member 2<br>
+SLC7A11  -  solute carrier family 7 (anionic amino acid transporter light chain, xc- system), member 11<br>
+SLC25A42  -  solute carrier family 25, member 42<br>
+SLC17A5  -  solute carrier family 17 (acidic sugar transporter), member 5<br>
+CNNM3  -  cyclin m3<br>
+TMC6  -  transmembrane channel-like 6<br>
+SLC31A1  -  solute carrier family 31 (copper transporter), member 1<br>
+MCUR1  -  mitochondrial calcium uniporter regulator 1<br>
+ANXA1  -  annexin a1<br>
+ATP8B3  -  atpase, aminophospholipid transporter, class i, type 8b, member 3<br>
+SLC4A8  -  solute carrier family 4, sodium bicarbonate cotransporter, member 8<br>
+ADRA1A  -  adrenoceptor alpha 1a<br>
+PARK7  -  parkinson protein 7<br>
+NIPAL1  -  nipa-like domain containing 1<br>
+YWHAE  -  tyrosine 3-monooxygenase/tryptophan 5-monooxygenase activation protein, epsilon polypeptide<br>
+TPT1  -  tumor protein, translationally-controlled 1<br>
+</font></div>
+</td>
+</tr>
+</tbody></table>
+<p>Species used: Homo sapiens</p><p>The system has recognized 6159 genes out of 6159 gene terms entered by the user.<br> 6159 genes were recognized by gene symbol and 0 genes by other gene IDs .<br>881 duplicate genes were removed (keeping the highest ranking instance of each gene) leaving  a total of 5278 genes.<br>Only 4735 of these genes are associated with a GO term.<br></p>
+<p> The GOrilla database is periodically updated using the <a href="http://www.geneontology.org/">GO database</a> and other sources.<br>
+The GOrilla database was last updated on May 30, 2015</p>
+<p>This results page will be available on this site for one month from now (until 
+Jul 5, 2015
+). You can bookmark this page and come back to it later.
+</p>
+<a name="p_value_info"></a><br><b>'P-value'</b> is the enrichment p-value computed according to the mHG or HG model. This p-value is not corrected for multiple testing of 9324 GO terms.<br>
+<a name="fdr_info"></a><br><b>'FDR q-value'</b> is the correction of the above p-value for multiple testing using the Benjamini and Hochberg (1995) method. <br>Namely, for the i<sup>th</sup> term (ranked according to p-value) the FDR q-value is (p-value * number of GO terms) / i. <br>
+<a name="enrich_info"></a><br><b>Enrichment (N, B, n, b)</b> is defined as follows:<br>N - is the total number of genes<br>B - is the total number of genes associated with a specific GO term<br>n - is the number of genes in the top of the user's input list or in the target set when appropriate<br>b - is the number of genes in the intersection<br>Enrichment = (b/n) / (B/N)<br>
+<a name="genes_info"></a><br><b>Genes:</b> For each GO term you can see the list of associated genes that appear in the optimal top of the list.<br>Each gene name is specified by gene symbol followed by a short description of the gene <br>
+<p>
+<a href="http://cbl-gorilla.cs.technion.ac.il/"> Back to the GOrilla main page </a>
+</p>
+
+
+</body></html>
