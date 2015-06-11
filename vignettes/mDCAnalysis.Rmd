@@ -1,7 +1,7 @@
 ---
 title: 'MAST: A flexible statistical framework for assessing transcriptional changes
   and characterizing heterogeneity in single-cell RNA-seq data. mDC Analysis.'
-author: Greg Finak, Andrew McDavid, Masanao Yajima, Jingyuan Deng, Vivian Gersuk, Alex Shalek, Chloe K. Schlicter, Hannah W. Miller, Martin  Prlic, Peter Linsley, Raphael Gottardo
+author: Greg Finak, Andrew McDavid, Masanao Yajima, Jingyuan Deng, Vivian Gersuk, Alex Shalek, Chloe K. Schlicter, Hannah W. Miller, M. Juliana McElrath, Martin  Prlic, Peter Linsley, Raphael Gottardo
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -270,6 +270,7 @@ toplot[,include := any(include_sub),.(Stim,TERM)]
 #toplot <- toplot[!TERM %like% "TBA"&!GOID%like%"GO"&!GOID%in%c("SUSTAINED_INFLAM","PEAKED_INFLAM","CORE_ANTIVIRAL")]
 toplot <- toplot[!TERM %like% "TBA"]
 toplot = toplot[,coefficient := factor(toplot$coefficient)]
+#LPS
 MELTED <-
 data.table(melt(toplot[coefficient  %like% "LPS" &
 include == TRUE],id = c(
@@ -281,11 +282,38 @@ MELTED[,"component" := (str_split_fixed(variable,"_",2))[,1]]
 MELTED[,component := ifelse(component == "Z","combined",component)]
 levs <-
 MELTED[variable %like% "Z" &
-component %in% "combined"][order(-abs(value))][,unique(TERM)][1:50]
+component %in% "combined"][order(-(value))][,unique(TERM)][1:50]
+
+#PIC
+MELTED_PIC <-
+data.table(melt(toplot[coefficient  %like% "PIC" &
+include == TRUE],id = c(
+"TERM","GOID","include","coefficient","Stim","effectfilter"
+)))
+MELTED_PIC <- MELTED_PIC[!variable %like% "adj"]
+MELTED_PIC[,"component" := (str_split_fixed(variable,"_",2))[,1]]
+MELTED_PIC[,component := ifelse(component == "Z","combined",component)]
+levs_pic <-
+MELTED_PIC[variable %like% "Z" &
+component %in% "combined"][order(-(value))][,unique(TERM)][1:50]
+
+#PAM
+MELTED_PAM <-
+data.table(melt(toplot[coefficient  %like% "PAM" &
+include == TRUE],id = c(
+"TERM","GOID","include","coefficient","Stim","effectfilter"
+)))
+MELTED_PAM <- MELTED_PAM[!variable %like% "adj"]
+MELTED_PAM[,"component" := (str_split_fixed(variable,"_",2))[,1]]
+MELTED_PAM[,component := ifelse(component == "Z","combined",component)]
+levs_pam <-
+MELTED_PAM[variable %like% "Z" &
+component %in% "combined"][order(-(value))][,unique(TERM)][1:50]
+
 shalek_gsea_heatmap <-
 ggplot(MELTED[variable %like% "Z" &
 GOID %in% (MELTED[variable %like% "Z" &
-component %in% "combined"][order(-abs(value))][,unique(GOID)][1:50])]) + aes(x = coefficient,y = TERM,fill =
+component %in% "combined"][order(-(value))][,unique(GOID)][1:50])]) + aes(x = coefficient,y = TERM,fill =
 sign(value) * pmin(15,abs(value))) + facet_wrap(~ component,nrow = 1) +
 geom_raster() + theme_linedraw() + theme(
 legend.position = "right",axis.text.x = element_text(angle = 90,hjust =
@@ -305,6 +333,48 @@ saveRDS(sets,file = "../inst/extdata/Shalek_Modules.rds")
 sets_symbols = lapply(sets,function(s)
 pData(featureData(filtered_nobaseline))[s,"symbolid"])
 saveRDS(sets_symbols,file = "../inst/extdata/Shalek_Modules_symbol.rds")
+```
+
+## PIC Stimulation GSEA
+```{r PIC_GSEA,dev="pdf"}
+shalek_gsea_heatmap_PIC <-
+ggplot(MELTED_PIC[variable %like% "Z" &
+GOID %in% (MELTED_PIC[variable %like% "Z" &
+component %in% "combined"][order(-(value))][,unique(GOID)][1:50])]) + aes(x = coefficient,y = TERM,fill =
+sign(value) * pmin(15,abs(value))) + facet_wrap(~ component,nrow = 1) +
+geom_raster() + theme_linedraw() + theme(
+legend.position = "right",axis.text.x = element_text(angle = 90,hjust =
+1),axis.text.y = element_text(size = 7)
+) + scale_fill_gradient2(
+"GSEA Z-score",low = ("#E9A3C9"),mid = ("#F7F7F7"),high = ("#A1D76A"),space =
+"Lab",limits = c(-20,20)
+) + scale_y_discrete("Module Name",limits = rev(levs_pic),labels = rev(levs_pic)) +
+scale_x_discrete("Stimulation and Timepoint",labels = c("Time 2h","Time 4h", "Time 6h"))
+```
+
+## PAM Stimulation GSEA
+```{r PAM_GSEA,dev="pdf"}
+shalek_gsea_heatmap_PAM <-
+ggplot(MELTED_PAM[variable %like% "Z" &
+GOID %in% (MELTED_PAM[variable %like% "Z" &
+component %in% "combined"][order(-(value))][,unique(GOID)][1:50])]) + aes(x = coefficient,y = TERM,fill =
+sign(value) * pmin(15,abs(value))) + facet_wrap(~ component,nrow = 1) +
+geom_raster() + theme_linedraw() + theme(
+legend.position = "right",axis.text.x = element_text(angle = 90,hjust =
+1),axis.text.y = element_text(size = 7)
+) + scale_fill_gradient2(
+"GSEA Z-score",low = ("#E9A3C9"),mid = ("#F7F7F7"),high = ("#A1D76A"),space =
+"Lab",limits = c(-20,20)
+) + scale_y_discrete("Module Name",limits = rev(levs_pam),labels = rev(levs_pam)) +
+scale_x_discrete("Stimulation and Timepoint",labels = c("Time 2h","Time 4h", "Time 6h"))
+shalek_gsea_heatmap_PAM
+pdf(file="../inst/extdata/output/gsea_pam_pic.pdf",width=15)
+library(gridExtra)
+grid.arrange(shalek_gsea_heatmap_PAM,
+shalek_gsea_heatmap_PIC,nrow=1)
+grid.text(c("A","B"),x=c(0.03,0.53),y=c(0.97,0.97))
+dev.off()
+
 ```
 
 

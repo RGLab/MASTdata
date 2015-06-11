@@ -1,7 +1,7 @@
 ---
 title: 'MAST: A flexible statistical framework for assessing transcriptional changes
   and characterizing heterogeneity in single-cell RNA-seq data. MAIT Analysis.'
-author: Greg Finak, Andrew McDavid, Masanao Yajima, Jingyuan Deng, Vivian Gersuk, Alex Shalek, Chloe K. Schlicter, Hannah W. Miller, Martin  Prlic, Peter Linsley, Raphael Gottardo
+author: Greg Finak, Andrew McDavid, Masanao Yajima, Jingyuan Deng, Vivian Gersuk, Alex Shalek, Chloe K. Schlicter, Hannah W. Miller, M. Juliana McElrath, Martin  Prlic, Peter Linsley, Raphael Gottardo
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
