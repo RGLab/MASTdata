@@ -12,7 +12,7 @@ vignette: >
 # mDC Cell Maturation
 
 
-```{r load,echo=FALSE}
+```{r load,echo=FALSE,warning=FALSE,message=FALSE}
 rm(list=ls())
 suppressPackageStartupMessages({
   
@@ -51,7 +51,7 @@ knitr::opts_chunk$set(list(echo=FALSE,eval=TRUE,message=FALSE,error=FALSE,warnin
 ```
 
 
-```{r filtering_and_modules, cache=FALSE,echo=FALSE}
+```{r filtering_and_modules, cache=FALSE,echo=FALSE,results='hide'}
 filtered<-sca_alex
 percent_expressed<-0.1
 thres<-"adapt"
@@ -99,7 +99,7 @@ BP <- BP[,module_member:=ids.idx,list(GOALL)]
 
 ### Fit zlm to stimulation and timepoint
 
-```{r zlm,dependson="filtering_and_modules", cache=FALSE}
+```{r zlm,dependson="filtering_and_modules", cache=FALSE,echo=7}
 cData(filtered)$Stim <- factor(cData(filtered)$Stim,levels=c("Unstimulated","LPS","PAM","PIC"))
 cData(filtered)$Time <- factor(cData(filtered)$Time)
 filtered_nobaseline <- subset(filtered,!Stim%in%c("Unstimulated")) #drop Time 0
@@ -119,7 +119,7 @@ fit.bystim.nongeneson <- zlm.SingleCellAssay(~Stim/Time,sca=filtered_nobaseline,
 
 ### Test for any time effect in LPS
 
-```{r any_time_effect,dependson="zlm", cache=FALSE}
+```{r any_time_effect,dependson="zlm", cache=FALSE,fig.width=15}
 #Test for any time effect
 M <- matrix(0,nrow=ncol(coef(fit,"D")))
 rownames(M) <- colnames(coef(fit,"D"))
@@ -143,7 +143,7 @@ tg<-merge(lfc.anytime[contrast%like%"LPS"&contrast%like%"Time6h"],res_gene_hurdl
 COMPASS::pheatmap(exprs(filtered_nobaseline[cData(filtered_nobaseline)$Time%in%c("1h","6h")&cData(filtered_nobaseline)$Stim%in%"LPS",as.character(tg)]))
 ```
 
-In the LPS stimulation, testing for any time effect, when adjusting for ngeneson we detect `r res_gene_hurdle[,sum(adj<0.01)]` differentially expressed genes. When we don't adjust for ngeneson, we detect `r nong.test[,sum(adj<0.01)]` genes.
+<!-- In the LPS stimulation, testing for any time effect, when adjusting for ngeneson we detect `r res_gene_hurdle[,sum(adj<0.01)]` differentially expressed genes. When we don't adjust for ngeneson, we detect `r nong.test[,sum(adj<0.01)]` genes. -->
 
 
 
@@ -171,7 +171,7 @@ geneset_index   = ids2indices(geneset_id, fData(filtered_nobaseline)$symbolid)
 ```
 
 
-```{r gsea,dependson="zlm;filtering_and_modules",cache=FALSE,fig.width=10,fig.height=10}
+```{r gsea,dependson="zlm;filtering_and_modules",cache=FALSE,fig.width=10,fig.height=10,echo=c(3,20)}
 #GSEA
 options(mc.cores = 7)
 cache(boot_shalek <- bootVcov1(zlmfit = fit,R = 100))
@@ -193,7 +193,7 @@ sets[[names(emory_blood_transcript_modules)[i]]] <-
 which(gene_names %in% emory_blood_transcript_modules[[i]])
 }
 sets <- c(sets,geneset_index)
-colnames(coef(fit,"D"))
+#colnames(coef(fit,"D"))
 hyp <-
 lapply(colnames(coef(fit,"D"))[colnames(coef(fit,"D")) %like% "Time"],function(x)
 CoefficientHypothesis(x))
@@ -230,7 +230,7 @@ toplot = toplot[module %like% "GO:" |
 module %in% c("CORE_ANTIVIRAL","PEAKED_INFLAM","SUSTAINED_INFLAM")]
 #BTM
 #toplot=toplot[!module%like%"GO:"&!module%in%c("CORE_ANTIVIRAL","PEAKED_INFLAM","SUSTAINED_INFLAM")]
-toplot[,adjp:= p.adjust(P,"fdr"),.(factor(coefficient %like% "LPS"):factor(coefficient %like%
+toplot = toplot[,adjp:= p.adjust(P,"fdr"),.(factor(coefficient %like% "LPS"):factor(coefficient %like%
 "PIC"):factor(coefficient %like% "PAM"))]
 
 #compute effect size filters for each coefficient
@@ -264,8 +264,8 @@ toplot = merge(toplot,effect.filters,by=c("GOID","coefficient"))
 #Compute an adjusted p-value for each Stimulation across all timepoints.
 #toplot = toplot[,adjp := p.adjust(P,"fdr"),.(Stim)]
 #include if fdr and threshold passed at any time
-toplot[,include_sub := adjp<0.01&effectfilter,.(coefficient)]
-toplot[,include := any(include_sub),.(Stim,TERM)]
+toplot = toplot[,include_sub := adjp<0.01&effectfilter,.(coefficient)]
+toplot = toplot[,include := any(include_sub),.(Stim,TERM)]
 #BTM
 #toplot <- toplot[!TERM %like% "TBA"&!GOID%like%"GO"&!GOID%in%c("SUSTAINED_INFLAM","PEAKED_INFLAM","CORE_ANTIVIRAL")]
 toplot <- toplot[!TERM %like% "TBA"]
@@ -278,8 +278,8 @@ include == TRUE],id = c(
 )))
 library(stringr)
 MELTED <- MELTED[!variable %like% "adj"]
-MELTED[,"component" := (str_split_fixed(variable,"_",2))[,1]]
-MELTED[,component := ifelse(component == "Z","combined",component)]
+MELTED = MELTED[,"component" := (str_split_fixed(variable,"_",2))[,1]]
+MELTED = MELTED[,component := ifelse(component == "Z","combined",component)]
 levs <-
 MELTED[variable %like% "Z" &
 component %in% "combined"][order(-(value))][,unique(TERM)][1:50]
@@ -291,8 +291,8 @@ include == TRUE],id = c(
 "TERM","GOID","include","coefficient","Stim","effectfilter"
 )))
 MELTED_PIC <- MELTED_PIC[!variable %like% "adj"]
-MELTED_PIC[,"component" := (str_split_fixed(variable,"_",2))[,1]]
-MELTED_PIC[,component := ifelse(component == "Z","combined",component)]
+MELTED_PIC = MELTED_PIC[,"component" := (str_split_fixed(variable,"_",2))[,1]]
+MELTED_PIC = MELTED_PIC[,component := ifelse(component == "Z","combined",component)]
 levs_pic <-
 MELTED_PIC[variable %like% "Z" &
 component %in% "combined"][order(-(value))][,unique(TERM)][1:50]
@@ -304,8 +304,8 @@ include == TRUE],id = c(
 "TERM","GOID","include","coefficient","Stim","effectfilter"
 )))
 MELTED_PAM <- MELTED_PAM[!variable %like% "adj"]
-MELTED_PAM[,"component" := (str_split_fixed(variable,"_",2))[,1]]
-MELTED_PAM[,component := ifelse(component == "Z","combined",component)]
+MELTED_PAM = MELTED_PAM[,"component" := (str_split_fixed(variable,"_",2))[,1]]
+MELTED_PAM = MELTED_PAM[,component := ifelse(component == "Z","combined",component)]
 levs_pam <-
 MELTED_PAM[variable %like% "Z" &
 component %in% "combined"][order(-(value))][,unique(TERM)][1:50]
@@ -335,8 +335,9 @@ pData(featureData(filtered_nobaseline))[s,"symbolid"])
 saveRDS(sets_symbols,file = "../inst/extdata/Shalek_Modules_symbol.rds")
 ```
 
+
 ## PIC Stimulation GSEA
-```{r PIC_GSEA,dev="pdf"}
+```{r PIC_GSEA}
 shalek_gsea_heatmap_PIC <-
 ggplot(MELTED_PIC[variable %like% "Z" &
 GOID %in% (MELTED_PIC[variable %like% "Z" &
@@ -350,10 +351,11 @@ legend.position = "right",axis.text.x = element_text(angle = 90,hjust =
 "Lab",limits = c(-20,20)
 ) + scale_y_discrete("Module Name",limits = rev(levs_pic),labels = rev(levs_pic)) +
 scale_x_discrete("Stimulation and Timepoint",labels = c("Time 2h","Time 4h", "Time 6h"))
+shalek_gsea_heatmap_PIC
 ```
 
 ## PAM Stimulation GSEA
-```{r PAM_GSEA,dev="pdf"}
+```{r PAM_GSEA}
 shalek_gsea_heatmap_PAM <-
 ggplot(MELTED_PAM[variable %like% "Z" &
 GOID %in% (MELTED_PAM[variable %like% "Z" &
@@ -376,7 +378,11 @@ grid.text(c("A","B"),x=c(0.03,0.53),y=c(0.97,0.97))
 dev.off()
 
 ```
+### LPS Stimulation GSEA
 
+```{r}
+shalek_gsea_heatmap
+```
 
 ### Residuals within significant modules
 
@@ -461,7 +467,7 @@ ggsave(
 
 ### Module scores
 
-```{r, dependson="zlm;filtering_and_modules;gsea",cache=FALSE,warning=FALSE,message=FALSE}
+```{r, dependson="zlm;filtering_and_modules;gsea",cache=FALSE,warning=FALSE,message=FALSE,results='hide'}
 options(mc.cores = 7)
 
 score_4_hook <- function(x) {
@@ -577,7 +583,7 @@ dev.off()
 
 ### Visualization of residual correlation over time in LPS
 
-```{r residual_correlation,dependson="zlm;filtering_and_modules;any_time_effect",cache=FALSE}
+```{r residual_correlation,dependson="zlm;filtering_and_modules;any_time_effect",cache=FALSE,results='hide'}
 setkey(lfc.anytime,primerid)
 setkey(res_gene_hurdle,primerid)
 genes_to_plot <-
@@ -636,7 +642,7 @@ shalek_resid_cor_lps <-
 
 ### Correlations accounting for ngeneson
 
-```{r}
+```{r,results='hide'}
 library(psych)
 de_genes_ng <-
   unique(merge(res_gene_hurdle,lfc.anytime)[adj < 0.01 &
@@ -681,7 +687,7 @@ de_genes_ng <-
 
 ### PC plot of residuals in LPS
 
-```{r pca_residuals,cache=FALSE,dependson="any_time_effect;zlm;filtering_and_modules"}
+```{r pca_residuals,cache=FALSE,dependson="any_time_effect;zlm;filtering_and_modules",results='hide'}
                                               PCbiplot <-
                                                 function(PC, x = "PC1", y = "PC2", colors = c('black', 'black', 'red', 'red'),arrow_colors =
                                                 "red",point_colors = "black",arrow_alpha = 0.75,meta = NULL,gene_subset =
@@ -847,7 +853,7 @@ png(
 
 ### Visualization of residual correlation over time in PAM
 
-```{r viz_pam,cache=FALSE,dependson="filtering_and_modules;zlm_pam"}
+```{r viz_pam,cache=FALSE,dependson="filtering_and_modules;zlm_pam",results='hide'}
   setkey(lfc.anytime.pam,primerid)
   setkey(res_gene_hurdle.pam,primerid)
   genes_to_plot.pam <-
@@ -953,7 +959,7 @@ png(
 
 ### Visualization of residual correlation over time in PIC
 
-```{r viz_pic,cache=FALSE,dependson="filtering_and_modules;zlm_pic"}
+```{r viz_pic,cache=FALSE,dependson="filtering_and_modules;zlm_pic",results='hide'}
     setkey(lfc.anytime.pic,primerid)
     setkey(res_gene_hurdle.pic,primerid)
     genes_to_plot.pic <-

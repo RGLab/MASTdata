@@ -17,7 +17,7 @@ vignette: >
 # install_git('http://github.com/RGLab/MAST')
 ```
 
-```{r,echo=FALSE, error=FALSE}
+```{r,echo=FALSE, error=FALSE,echo=FALSE,results='hide',warnin=FALSE}
 # Multiple plot function
 #
 # ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
@@ -94,7 +94,7 @@ options(mc.cores = detectCores() - 1) #or set smaller if you find yourself runni
 })
 LARGE_MEMORY_CORES <- 7 #for large memory operations
 knitr::opts_chunk$set(list(
-echo = FALSE,eval = TRUE,message = FALSE,error = FALSE,warning = FALSE,cache = TRUE))
+echo = FALSE,eval = TRUE,message = FALSE,error = FALSE,warning = FALSE,cache = TRUE,fig.width=10,fig.height=8))
 plotheme <-
 theme(
 plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
@@ -157,9 +157,9 @@ dt_long[, `:=`(condition, ifelse(grepl("-Stim", variable), "Stim", "Unstim"))]
 ```
 
 
-### ZLM results
+### Hurdle model fitting 
 
-```{r zlm, dependson="data",results='hide'}
+```{r zlm, dependson="data",results='hide',echo=6}
 options(mc.cores=LARGE_MEMORY_CORES)
 # ZLM (ridge regression for continuous, get standardized deviance residuals)
 cond<-factor(cData(sca)$condition)
@@ -203,8 +203,9 @@ nrow(res_gene_hurdle_nong[adj<0.01])
 nrow(res_gene_hurdle[adj<0.01])
 ```
 
+### Comparison of ranks with and without CDR effect. 
 
-```{r compare_ranks}
+```{r compare_ranks,fig.cap='On average, 35% of differentailly expressed genes are attributed only to a CDR effect.'}
 A=copy(res_gene_hurdle_nong)
 B=copy(res_gene_hurdle)
 A=na.omit(A[order(-abs(logFC),adj)])
@@ -212,11 +213,13 @@ B=na.omit(B[order(-abs(logFC),adj)])
 C=merge(A[,.(.I,symbolid)],B[,.(.I,symbolid)],by="symbolid")
 setkey(C,I.x)
 ggplot(data.table(ngenes=seq(100,nrow(C),by=100),overlap=sapply(seq(100,nrow(C),by=100),function(x)mean(C[1:x,I.x<x&I.y<x]))))+geom_line(aes(x=ngenes,y=overlap))+theme_linedraw()+scale_x_continuous("Number of top genes Selected")+scale_y_continuous("Proportion overlap between CDR and non CDR models")+geom_vline(x = c(291,1491),lty=2)
-C[1:1491]
+#C[1:1491]
 cat(paste(C[1:1491][!C[1:1491,I.x<1491&I.y<1491],symbolid],"\n"),file="../inst/extdata/withoutCDR.txt")
 cat(paste(C[1:1491][C[1:1491,I.x<1491&I.y<1491],symbolid],"\n"),file="../inst/extdata/withCDR.txt")
 cat(paste(C[,symbolid],"\n"),file="../inst/extdata/universe.txt")
 ```
+
+<!-- We observe `r nrow(res_gene_hurdle_nong[adj<0.01])` differentially expressed genes without the CDR effect in the model, and `r nrow(res_gene_hurdle[adj<0.01])` with the CDR effect. -->
 
 ```{r}
 #gsea for limma exclusive genes
@@ -228,9 +231,6 @@ cat(paste0(gsea_exclusive_other_methods[limma_ng&!zlm_ng,symbolid],"\n"),file=".
 cat(paste0(gsea_exclusive_other_methods[edger_ng&!zlm_ng,symbolid],"\n"),file="../inst/extdata/edger_only.txt")
 cat(paste0(gsea_exclusive_other_methods[deseq_ng & !zlm_ng,symbolid],"\n"),file="../inst/extdata/deseq_only.txt")
 ```
-
-
-We observe `r nrow(res_gene_hurdle_nong[adj<0.01])` differentially expressed genes without the CDR effect in the model, and `r nrow(res_gene_hurdle[adj<0.01])` with the CDR effect.
 
 ### Analysis of deviance for ngeneson (Supplementary Figure 2)
 
@@ -278,7 +278,6 @@ pdf(file = "../inst/extdata/output/Supplementary_Figure_2.pdf",width = 8,height 
       5)
       print(p3)
       dev.off()
-      print(p3)
 ```
 
 ```{r,include=TRUE}
@@ -440,7 +439,10 @@ element_line(colour = "black"),legend.position = "bottom"
 ) + scale_color_manual("",values = c(brewer.pal(name = "PiYG",n = 3)[c(1)],"#5729EE"))
 ```
 
-```{r}
+
+### Heatmap and PCA of module scores
+
+```{r,fig.width=20,fig.height=13}
 #heatmap of module scores
 mat = dcast(unique(scores[,list(cell,set,score)]),cell~set,value.var="score",fun.aggregate=mean)
 #colnames(mat) = gsub("\\n"," ",colnames(mat))
@@ -454,7 +456,7 @@ legend("bottom",c("Stim","Non-stim"),col=c("black","red"),pch=20)
 
 plot(prcomp(mat))
 
-sort(prcomp(mat)$rotation[,1])
+#sort(prcomp(mat)$rotation[,1])
 
 ```
 
@@ -593,7 +595,7 @@ dev.off()
 
 ### Figure 2 - Heatmap of Differentially Expressed Genes and Activated MAIT Module Scores
 
-```{r,fig.width=10,fig.height=8}
+```{r,fig.width=15,fig.height=8}
 grid.newpage()
 lay<-grid.layout(nrow(lout), ncol(lout))
 pushViewport(viewport(layout=lay,name = "top"))
@@ -815,7 +817,7 @@ dev.off()
 
 ### Figure 4 - Residual Correlations and PCA
 
-```{r,fig.width=10}
+```{r,fig.width=15}
 grid.newpage()
 lay<-grid.layout(nrow(lout), ncol(lout))
 pushViewport(viewport(layout=lay,name = "top"))
@@ -1007,7 +1009,7 @@ sum(highly.correlated.genes.ng.unstim%in%c(mait_signature_genes_up,mait_signatur
 sum(highly.correlated.genes.nong.unstim%in%c(mait_signature_genes_up,mait_signature_genes_down))
 ```
 
-### Supplementary Figure 10 - Residual Background Correlation
+### Supplementary Figure 10 - Change in residual background correlation after adjusting for CDR.
 
 ```{r,fig.width=10}
 grid.newpage()
@@ -1122,9 +1124,9 @@ symbols<-data.table(symbols)
 kable(symbols[chrmap%in%(symbols[,.N,chrmap][N>1]$chrmap)][order(chrmap)])
 ```
 
-### Supplementary Figure 14
+### Supplementary Figure 14 - Heatmaps of DE genes between non-responding stimulated cells and stimulated / non-stimulated cells
 
-```{r, fig.width=10}
+```{r, fig.width=20}
 grid.newpage()
 pushViewport(viewport(layout = grid.layout(nrow=1,ncol=3)))
 vp<-viewport(layout.pos.row = 1,layout.pos.col = 1)
@@ -1144,7 +1146,7 @@ popViewport(n=2)
 
 ### GSEA between non-stimulated and non-responding cells
 
-```{r,results='hide',fig.width=10,fig.height=9}
+```{r,results='hide',fig.width=10,fig.height=9,cache=FALSE}
 module<-"bp"
 module_file <- list.files("../inst/extdata/", pattern = module, full.names = TRUE)
 gene_set <- getGmt(module_file)
@@ -1207,6 +1209,8 @@ scree_mait<-lapply(list(prcomp(exprs(sca))$sdev^2),function(x)x/sum(x))[[1]][1:8
 foo=data.table(MAST:::melt.SingleCellAssay(sca))
 ```
 
+### Figure 1
+
 
 ```{r fig1_1,fig.width=10,include=TRUE}
 mait_pc<-data.frame(pcsm[,1:2],ngeneson=foo[,list(ngeneson=mean(tpm>0)),`wellKey`][,ngeneson],experiment="MAIT",stim=cData(sca)[,"condition"])
@@ -1266,9 +1270,8 @@ grid.text("D",x=0.52,y=0.52)
 dev.off()
 ```
 
-### Figure 1
 
-```{r,echo=FALSE,fig.width=8,fig.height=8}
+```{r,eval=FALSE,echo=FALSE,fig.width=8,fig.height=8}
 grid.newpage()
 pushViewport(viewport(layout=grid.layout(nrow=nrow(layout),ncol=ncol(layout))))
 vp=viewport(layout.pos.row = 1,layout.pos.col = 2)
@@ -1287,7 +1290,7 @@ grid.text("D",x=0.52,y=0.52)
 
 ## Flow cytometry data
 
-```{r, fig.width=15,fig.height=7}
+```{r, fig.width=15,fig.height=7,cache=FALSE}
 library(flowCore)
 library(flowWorkspace)
 library(gridExtra)
