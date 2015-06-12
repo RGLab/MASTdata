@@ -1,7 +1,8 @@
 MASTDataPackage
 ===============
 
-MAST data package for the MAST single cell paper. Contains the data sets and code to reproduce the analysis for "MAST: A flexible statistical framework for assessing transcriptional changes and characterizing heterogeneity in single-cell RNA-seq data."
+MAST data package for the MAST single cell paper.   
+Contains the data sets and code to reproduce the analysis for "MAST: A flexible statistical framework for assessing transcriptional changes and characterizing heterogeneity in single-cell RNA-seq data."
 
 #### Vignettes 
 
