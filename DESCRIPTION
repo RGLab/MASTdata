@@ -1,7 +1,7 @@
 Package: MASTDataPackage
 Type: Data package
 Title: This is the data used for the MAST paper
-Version: 1.4
+Version: 1.4.1
 Date: 2015-05-12
 Author: Jingyuan Deng, Greg Finak, Andrew McDavid, Masanao Yajima
 Maintainer: Masanao Yajima <myajima@fredhutch.org>

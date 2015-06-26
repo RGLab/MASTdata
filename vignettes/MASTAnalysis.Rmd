@@ -223,7 +223,7 @@ cat(paste(C[,symbolid],"\n"),file="../inst/extdata/universe.txt")
 
 ```{r}
 #gsea for limma exclusive genes
-gsea_exclusive_other_methods<-readRDS("~/Downloads/significant_genes_q001_fc13.rds")
+gsea_exclusive_other_methods<-readRDS("../inst/extdata/significant_genes_q001_fc13.rds") #From the anlaysis by Masanao Yajima
 setDT(gsea_exclusive_other_methods)
 
 #limma only
