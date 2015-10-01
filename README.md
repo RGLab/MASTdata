@@ -12,4 +12,4 @@ Vignettes reproduce the figures in the paper.
 
 [MAIT data analysis](http://github.com/RGLab/MASTdata/blob/master/inst/doc/MAITAnalysis/MASTAnalysis.md)  
 [mDC data analysis](http://github.com/RGLab/MASTdata/blob/master/inst/doc/mDCAnalysis/mDCAnalysis.md)  
-[Additional analyses](http://github.com/RGLab/MASTdata/blob/master/inst/doc/AdditionalAnalyses.html)
+[Additional analyses](http://github.com/RGLab/MASTdata/blob/master/inst/doc/AdditionalAnalysis/AdditionalAnalyses.md)
