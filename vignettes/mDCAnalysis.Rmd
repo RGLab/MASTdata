@@ -116,6 +116,38 @@ options(mc.cores=7)
 fit.bystim.nongeneson <- zlm.SingleCellAssay(~Stim/Time,sca=filtered_nobaseline,method="ridge",ebayes=TRUE,hook=deviance_residuals_hook,lambda=0.1)
 ```
 
+#### MAST CDR vs SVA and RUV
+```{r}
+### Surrogate Variable Analysis
+library(sva)
+library(RUVSeq)
+E = (2^exprs(filtered_nobaseline))-1
+ng = rowMeans(E>0)
+svafit = svaseq(t(round(exprs(filtered_nobaseline)*3e6)),mod = model.matrix(~Stim/Time,cData(filtered_nobaseline)),n.sv = 2)
+boxplot(sv~Time/Stim,data.frame(sv=svafit$sv[,2],Stim = cData(filtered_nobaseline)$Stim,Time=cData(filtered_nobaseline)$Time))
+
+
+### RUVSeq
+mat = dcast((melt(lapply(apply(model.matrix(~foo-1,data.frame(foo=interaction(cData(filtered_nobaseline)$Stim,cData(filtered_nobaseline)$Time))),2,function(x)which(x==1)),as.list))),L1~L2)
+mat[is.na(mat)]=-1
+ruvres = RUVs(x = t(exprs(filtered_nobaseline)), cIdx = 1:8029, k = 2, scIdx = as.matrix(mat[,-1L]),isLog = TRUE)
+pdf(file="../inst/extdata/RUVSVAmDC.pdf",width=12,height=3)
+par(mfrow=c(1,4))
+plot(svafit$sv[,1],cData(filtered_nobaseline)$cngeneson,xlab="SV1",ylab="CDR",col=cData(filtered_nobaseline)$Stim:cData(filtered_nobaseline)$Time,pch=20)
+text(y=-0.15,x=-0.1,labels = substitute("rho" == r,list(r=signif(cor(svafit$sv[,1],cData(filtered_nobaseline)$cngeneson),3))))
+
+plot(svafit$sv[,2],cData(filtered_nobaseline)$cngeneson,xlab="SV2",ylab="CDR",col=cData(filtered_nobaseline)$Stim:cData(filtered_nobaseline)$Time,pch=20)
+text(y=-0.15,x=-0.1,labels = substitute("rho" == r,list(r=signif(cor(svafit$sv[,2],cData(filtered_nobaseline)$cngeneson),3))))
+
+plot(ruvres$W[,1],cData(filtered_nobaseline)$cngeneson,col=cData(filtered_nobaseline)$Stim:cData(filtered_nobaseline)$Time,xlab="RUV1",ylab="CDR",pch=20)
+text(y=-0.15,x=0.25,labels = substitute("rho" == r,list(r=signif(cor(ruvres$W[,1],cData(filtered_nobaseline)$cngeneson),3))))
+
+plot(ruvres$W[,2],cData(filtered_nobaseline)$cngeneson,col=cData(filtered_nobaseline)$Stim:cData(filtered_nobaseline)$Time,xlab="RUV2",ylab="CDR",pch=20)
+text(y=-0.15,x=-0.05,labels = substitute("rho" == r,list(r=signif(cor(ruvres$W[,2],cData(filtered_nobaseline)$cngeneson),3))))
+dev.off()
+###
+```
+
 
 ### Test for any time effect in LPS
 
@@ -685,6 +717,62 @@ de_genes_ng <-
                                               
 ```
 
+
+## Figure 6a all in one panel
+```{r}
+                                             PCbiplot <-
+                                                function(PC, x = "PC1", y = "PC2", colors = c('black', 'black', 'red', 'red'),arrow_colors =
+                                                "red",point_colors = "black",arrow_alpha = 0.75,meta = NULL,gene_subset =
+                                                NULL,scale = 0.7) {
+                                                # PC being a prcomp object
+                                                data <- data.frame(obsnames = row.names(PC$x), PC$x,meta)
+                                                plot <-
+                                                ggplot(data, aes_string(x = x, y = y, color = point_colors)) + geom_point(
+                                                alpha = .8, size = 3, aes(label = obsnames),show_guide = FALSE
+                                                )
+                                                plot <-
+                                                plot + geom_hline(aes(0), size = .2) + geom_vline(aes(0), size = .2, color =
+                                                colors[2])
+                                                datapc <-
+                                                data.frame(varnames = rownames(PC$rotation), PC$rotation)
+                                                mult <- min((max(data[,y]) - min(data[,y]) / (max(datapc[,y]) - min(datapc[,y]))),
+                                                (max(data[,x]) - min(data[,x]) / (max(datapc[,x]) - min(datapc[,x]))))
+                                                datapc <- transform(datapc,
+                                                v1 = scale * mult * (get(x)),
+                                                v2 = scale * mult * (get(y)))
+                                                plot <-
+                                                plot + coord_equal() + geom_text(
+                                                data = datapc[gene_subset,], aes(x = v1, y = v2, label = varnames), size = 4, vjust =
+                                                1, color = arrow_colors,alpha = arrow_alpha
+                                                )
+                                                plot <-
+                                                plot + geom_segment(
+                                                data = datapc[gene_subset,], aes(
+                                                x = 0, y = 0, xend = v1, yend = v2
+                                                ), arrow = arrow(length = unit(0.2,"cm")), alpha = arrow_alpha, color =
+                                                arrow_colors
+                                                )
+                                                plot
+                                                }
+                                                
+                                                genes_to_plot <-
+                                                unique(merge(res_gene_hurdle,lfc.anytime)[adj < 0.01 &
+                                                abs(logFC) > FCTHRESHOLD,][order(-abs(logFC),adj)][1:1000,primerid])[1:20]
+                                                stim_sel <- "LPS"
+                                                shalek_LPS_residual_pca_oneplot <-
+                                                PCbiplot(
+                                                x = "PC1",y = "PC2",prcomp(t(residuals[genes_to_plot,cData(filtered_nobaseline)[,"Time"] %in%
+                                                c("1h","2h","4h","6h") &
+                                                cData(filtered_nobaseline)[,"Stim"] %like% stim_sel])),meta = cData(subset(filtered_nobaseline,Stim ==
+                                                stim_sel)),gene_subset = genes_to_plot[1:4],scale = 1,point_colors = "Stim",arrow_colors =
+                                                "black"
+                                                )  + theme_linedraw() + theme(
+                                                plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
+                                                element_line(colour = "black")
+                                                ) + aes(col=Time)+geom_point(show_guide=TRUE)
+shalek_LPS_residual_pca_oneplot
+```
+
 ### PC plot of residuals in LPS
 
 ```{r pca_residuals,cache=FALSE,dependson="any_time_effect;zlm;filtering_and_modules",results='hide'}
@@ -740,6 +828,8 @@ de_genes_ng <-
                                                 )
                                                 
 ```
+
+
 
 ```{r figure6}
 pdf("../inst/extdata/output/Figure6.pdf",width = 10,height = 6)

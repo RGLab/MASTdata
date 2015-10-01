@@ -18,6 +18,7 @@ vignette: >
 ```
 
 ```{r,echo=FALSE, error=FALSE,echo=FALSE,results='hide',warnin=FALSE}
+rm(list=objects())
 # Multiple plot function
 #
 # ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
@@ -134,6 +135,7 @@ min_gene_in_module <- 5
 
 ```{r, dependson="data", cache=FALSE,results='hide'}
 # thresholding
+layer(sca)<-"tpm"
 tt <- thresholdSCRNACountMatrix(2^exprs(sca) - 1, nbins = 20, min_per_bin = 30)
 
 if (thres == "adapt") {
@@ -168,7 +170,7 @@ cData(sca)$condition<-cond
 zlm <- zlm.SingleCellAssay(~condition + cngeneson, sca, method = "bayesglm", 
     ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"))
 zlm.nongeneson <- zlm.SingleCellAssay(~condition , sca, method = "bayesglm", 
-    ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"))
+  ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"), hook = deviance_residuals_hook)
 zlm.notrt <- zlm.SingleCellAssay(~cngeneson , sca, method = "bayesglm", 
     ebayes = TRUE, ebayesControl = list(method = "MLE", model = "H1"))
 zlm.null <- zlm.SingleCellAssay(~1 , sca, method = "bayesglm", 
@@ -176,6 +178,8 @@ zlm.null <- zlm.SingleCellAssay(~1 , sca, method = "bayesglm",
 # LRT
 lrt <- lrTest(zlm, "condition")
 lrt.nongeneson<-lrTest(zlm.nongeneson,"condition")
+
+
 
 # Still need to merge on logFC
 res_gene <- data.table(melt(lrt))
@@ -201,6 +205,37 @@ res_gene_hurdle_nong<-merge(lfc_nong,res_gene_hurdle_nong)
 
 nrow(res_gene_hurdle_nong[adj<0.01])
 nrow(res_gene_hurdle[adj<0.01])
+```
+
+### MAST CDR vs RUV and SVA
+```{r}
+### Surrogate Variable Analysis
+library(sva)
+library(RUVSeq)
+layer(sca)<-"count"
+E = (2^exprs(sca))-1
+layer(sca)<-"tpm"
+ng = rowMeans(E>0)
+svafit = svaseq(t(exprs(sca)),mod = model.matrix(~condition,cData(sca)),n.sv = 2)
+boxplot(sv~Stim,data.frame(sv=svafit$sv[,2],Stim = cData(sca)$condition))
+
+### RUVSeq
+ruvres = RUVs(x = t(exprs(sca)), cIdx = rep(TRUE,5306), k = 2, scIdx = matrix(c(1:37,38:73,-1),nrow=2,byrow=TRUE),isLog = TRUE)
+pdf(file="../inst/extdata/RUVSVAMAIT.pdf",width=8,height=2.5)
+par(mfrow=c(1,4))
+plot(svafit$sv[,1],cData(sca)$cngeneson,xlab="SV1",ylab="CDR",col=cData(sca)$condition,pch=20)
+text(y=-0.15,x=0.1,labels = substitute(R == rho,list(rho=signif(cor(svafit$sv[,1],cData(sca)$cngeneson),3))))
+
+plot(svafit$sv[,2],cData(sca)$cngeneson,xlab="SV2",ylab="CDR",col=cData(sca)$condition,pch=20)
+text(y=-0.15,x=0.1,labels = substitute(R == rho,list(rho=signif(cor(svafit$sv[,2],cData(sca)$cngeneson),3))))
+
+plot(ruvres$W[,1],cData(sca)$cngeneson,col=cData(sca)$condition,xlab="RUV1",ylab="CDR",pch=20)
+text(y=-0.15,x=0.4,labels = substitute(R == rho,list(rho=signif(cor(ruvres$W[,1],cData(sca)$cngeneson),3))))
+
+plot(ruvres$W[,2],cData(sca)$cngeneson,col=cData(sca)$condition,xlab="RUV2",ylab="CDR",pch=20)
+text(y=-0.15,x=-0.48,labels = substitute(R == rho,list(rho=signif(cor(ruvres$W[,2],cData(sca)$cngeneson),3))))
+dev.off()
+###
 ```
 
 ### Comparison of ranks with and without CDR effect. 
@@ -230,6 +265,8 @@ setDT(gsea_exclusive_other_methods)
 cat(paste0(gsea_exclusive_other_methods[limma_ng&!zlm_ng,symbolid],"\n"),file="../inst/extdata/Limma_only.txt")
 cat(paste0(gsea_exclusive_other_methods[edger_ng&!zlm_ng,symbolid],"\n"),file="../inst/extdata/edger_only.txt")
 cat(paste0(gsea_exclusive_other_methods[deseq_ng & !zlm_ng,symbolid],"\n"),file="../inst/extdata/deseq_only.txt")
+cat(paste0(gsea_exclusive_other_methods[scde & !zlm_ng,symbolid],"\n"),file="../inst/extdata/scde_only.txt")
+
 ```
 
 ### Analysis of deviance for ngeneson (Supplementary Figure 2)
@@ -437,6 +474,8 @@ condition) + facet_wrap( ~set) + theme_linedraw() + theme(
 plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line =
 element_line(colour = "black"),legend.position = "bottom"
 ) + scale_color_manual("",values = c(brewer.pal(name = "PiYG",n = 3)[c(1)],"#5729EE"))
+
+kable(dcast(scores[set %in% sets,list(score = mean(score)),list(cell,set,condition)][,set := factor(set,levels = sets)][,.(mad = sd(score)),.(condition,set)],set~condition),format = "latex")
 ```
 
 
@@ -545,7 +584,11 @@ COMPASS::pheatmap(E,row_annotation=R,col=(colorRampPalette(colors = brewer.pal(n
 gtr<-grid.grab(wrap=TRUE)
 fig_sets<-"MAIT"
 
-mait_scores<-ggplot(scores[set%like%fig_sets,list(score=mean(score)),list(cell,set,condition)])+geom_violin()+geom_jitter()+aes(x=condition,y=score,col=condition)+facet_wrap(~set,nrow = 2)+#geom_text(size=2.5,aes(label=gsub("Unstim-","U",gsub("Stim-","S",gsub("_.*","",gsub("1-MAIT-","",cell))))),data=scores[(cell%like%c("Stim-C15")|cell%like%c("Stim-C46")|cell%like%"Stim-C54"|cell%like%"Stim-C58"|cell%like%"Stim-C94"|cell%like%"Stim-C61")&set%like%fig_sets,list(score=mean(score)),list(cell,set,condition)],show_guide=FALSE)+
+up.outliers = scores[set%like%fig_sets,list(score=mean(score)),list(cell,set,condition)][set%like%"Up"&condition=="Stim"][,.(str_split_fixed(cell,"-",n=4)[,4],score,condition,set)][order(score)[1:2]]
+down.outliers=scores[set%like%fig_sets,list(score=mean(score)),list(cell,set,condition)][set%like%"Down"&condition=="Stim"][,.(str_split_fixed(cell,"-",n=4)[,4],score,condition,set)][order(score,decreasing=TRUE)[1:2]]       
+annot = data.frame(rbind(down.outliers,up.outliers))
+
+mait_scores<-ggplot(scores[set%like%fig_sets,list(score=mean(score)),list(cell,set,condition)])+geom_violin()+geom_jitter()+aes(x=condition,y=score,col=condition)+facet_wrap(~set,nrow = 2)+geom_text(aes(label=V1,x=condition, y=score),data=annot,show_guide=FALSE)+#geom_text(size=2.5,aes(label=gsub("Unstim-","U",gsub("Stim-","S",gsub("_.*","",gsub("1-MAIT-","",cell))))),data=scores[(cell%like%c("Stim-C15")|cell%like%c("Stim-C46")|cell%like%"Stim-C54"|cell%like%"Stim-C58"|cell%like%"Stim-C94"|cell%like%"Stim-C61")&set%like%fig_sets,list(score=mean(score)),list(cell,set,condition)],show_guide=FALSE)+
   theme_linedraw(base_size = 9)+theme(plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.line=element_line(colour="black"),legend.position="bottom")+scale_color_manual(values = c(brewer.pal(name = "PiYG",n=3)[c(1)],"#5729EE"))
 
 lout<-matrix(c(1,1,1,1,1,1,1,1,2,2,2,2,

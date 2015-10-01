@@ -1,0 +1,693 @@
+---
+title: "GO enrichment analysis and simulation studies"
+author: "Greg Finak and Masanao Yajima"
+date: "September 3, 2015"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Additional Analyses}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+We look at GO enrichment of DE genes using MAST, with and without CDR and compare it to GO enrichment of DE genes using other RNASeq tools. 
+
+We compare the ratio of immune specific to non-specific enriched modules.
+
+We'll use GO.db and org.Hs.eg.db for the MAIT cells.
+
+We'll use the the hypergeometric for testing enrichment. 
+
+We load the results and databases.
+
+```{r}
+library(data.table)
+library(plyr)
+library(GO.db)
+library(stringr)
+library(grid)
+library(gridExtra)
+library(ggplot2)
+library(mHG)
+library(org.Hs.eg.db)
+library(org.Mm.eg.db)
+#diffex = readRDS("../inst/extdata/method_comp_logfc_qvalue.rds")
+diffex = readRDS("../inst/extdata/comb_fdr_logfc.rds")
+
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+```
+
+
+```{r}
+goterms = select(org.Hs.eg.db,diffex[,primerid],"GO","ENTREZID")
+setDT(goterms)
+goterms = goterms[ONTOLOGY%in%"BP"]
+#only experimental evidence
+goterms = goterms[EVIDENCE%in%c("EXP","IDA","IPI","IMP","IGI","IEP")]
+unique.go = goterms[,unique(ENTREZID),.(GO)]
+terms = select(GO.db,columns = c("GOID","TERM"),unique(goterms$GO))
+setnames(unique.go,"GO","GOID")
+setnames(unique.go,"V1","ENTREZID")
+setDT(terms)
+terms = unique(terms)
+unique.go = unique(unique.go)
+unique.go = merge(unique.go,terms,by="GOID")
+unique.go[,N:=length(ENTREZID),.(GOID)]
+offspring = GOBPOFFSPRING[["GO:0002376"]]
+```
+
+```{r}
+setnames(diffex,"primerid","ENTREZID")
+thresholds = c(0.01,0.05,0.1)
+prob_thresh=0.01
+NN = length(unique(unique.go$ENTREZID))
+methods = c("zlm_fdr","zlm_ng_fdr","zlm_fix_fdr","zlm_fix_ng_fdr","limma_fdr","limma_fdr","limma_ng_fdr","deseq_fdr","deseq_ng_fdr","edger_fdr","edger_ng_fdr","scde_fdr")
+loops = expand.grid(thresholds,methods)
+thresh=0.05
+
+meth="zlm_ng_fdr"
+results = apply(loops,1,function(looprow){
+  thresh = looprow[1]
+  meth = as.character(looprow[2])
+  fc = gsub("fdr","log2fc",meth)
+  res = unique.go[ENTREZID%in%diffex[get(meth)<thresh&abs(get(fc))>log2(1.25),ENTREZID]][,.(prob = 1-phyper(q=length(ENTREZID),m = N, n = NN-N,k = length(diffex[get(meth)<thresh,ENTREZID])),TERM,N,hit = length(ENTREZID)),.(GOID)]
+ nr.imm = length(unique(res)[GOID%in%offspring&p.adjust(prob,"fdr")<prob_thresh,GOID]) 
+nr.tot = length(unique(res)[p.adjust(prob,"fdr")<prob_thresh,GOID])
+data.frame(thresh,meth,nr.imm,nr.tot,nr.imm/nr.tot)
+})
+```
+
+
+
+## Plot of the rate of detection of enriched immune GO terms vs FDR threshold for DE genes across different methods.
+
+```{r}
+results_r = ldply(results)
+setDT(results_r)
+results_r[,meth:=gsub("zlm_fix","zlmfix",meth)]
+results_r[,rate := nr.imm/nr.tot]
+results_r[,thresh:=as.numeric(as.character(thresh))]
+results_r[,method_global := str_split_fixed(meth,"_",3)[,1]]
+results_r[,withng := factor(str_split_fixed(meth,"_",3)[,2],labels=c("No CDR control","CDR control"))]
+p1 = ggplot(results_r[!(method_global%in%"zlmfix")])+aes(x=thresh,y=rate,color=method_global)+geom_point()+geom_line()+scale_x_continuous("FDR Threshold")+scale_y_continuous("Proportion of Immune\nSpecific GO Modules")+facet_wrap(~withng)+scale_color_brewer("Method",palette = 2,type="qual",limits=c("limma","zlm","deseq","edger","scde"),labels=c("Limma","MAST","DESeq","EdgeR","SCDE"))+theme_gray()
+leg = g_legend(p1)
+p1
+```
+
+
+## mDC
+```{r,eval=FALSE}
+diffex.mdc = readRDS("../inst/extdata/method_comp_logfc_qvalue_mDC.rds")
+setnames(diffex.mdc,"primerid","SYMBOL")
+diffex.mdc$SYMBOL=gsub("^(.)","\\U\\1",tolower(diffex.mdc$SYMBOL),perl=TRUE)
+goterms = select(org.Mm.eg.db,diffex.mdc[,SYMBOL],"GO","SYMBOL")
+setDT(goterms)
+goterms = goterms[ONTOLOGY%in%"BP"]
+#only experimental evidence
+goterms = goterms[EVIDENCE%in%c("EXP","IDA","IPI","IMP","IGI","IEP")]
+unique.go = goterms[,unique(SYMBOL),.(GO)]
+terms = select(GO.db,columns = c("GOID","TERM"),goterms$GO)
+setnames(unique.go,"GO","GOID")
+setnames(unique.go,"V1","SYMBOL")
+setDT(terms)
+terms = unique(terms)
+unique.go = unique(unique.go)
+unique.go = merge(unique.go,terms,by="GOID")
+unique.go[,N:=length(SYMBOL),.(GOID)]
+NN=length(unique(unique.go[,SYMBOL]))
+```
+
+
+## GO enrichment using hypergeometric for mDC.
+```{r,eval=FALSE}
+thresholds = c(0.01,0.05,0.1)
+prob_thresh=0.01
+methods = c("fdr_lma_2_wo","fdr_lma_2_ng","fdr_zlm_2_wo","fdr_zlm_2_ng","fdr_lma_4_wo","fdr_lma_4_ng","fdr_zlm_4_wo","fdr_zlm_4_ng","fdr_lma_6_wo","fdr_lma_6_ng","fdr_zlm_6_wo","fdr_zlm_6_ng")
+loops = expand.grid(thresholds,methods)
+results.mdc = apply(loops,1,function(looprow){
+  thresh = looprow[1]
+  meth = as.character(looprow[2])
+  fc = gsub("fdr","logFC",meth)
+    res = unique.go[SYMBOL%in%diffex.mdc[get(meth)<thresh&abs(get(fc))>log2(1.25),SYMBOL]][,.(prob = 1-phyper(q=length(SYMBOL),m = N, n = NN-N,k = length(diffex.mdc[get(meth)<thresh,SYMBOL])),TERM,N,hit = length(SYMBOL)),.(GOID)]
+
+nr.imm = length(unique(res)[GOID%in%offspring&p.adjust(prob,"fdr")<prob_thresh,GOID]) 
+
+nr.tot = length(unique(res)[p.adjust(prob,"fdr")<prob_thresh,GOID])
+data.frame(thresh,meth,nr.imm,nr.tot,nr.imm/nr.tot)
+})
+```
+
+```{r,eval=FALSE}
+results.mdc_r = ldply(results.mdc)
+setDT(results.mdc_r)
+results.mdc_r[,thresh:=as.numeric(as.character(thresh))]
+results.mdc_r[,method_global := str_split_fixed(meth,"_",4)[,2]]
+results.mdc_r[,time := str_split_fixed(meth,"_",4)[,3]]
+results.mdc_r[,withng := factor(str_split_fixed(meth,"_",4)[,4],labels=c("No CDR control","CDR control"))]
+results.mdc_r = results.mdc_r[,rate := mean(nr.imm)/(nr.tot),]
+results.mdc_r=results.mdc_r[,.(rate = mean(rate)),.(withng,method_global,thresh)]
+p2 = ggplot(results.mdc_r)+aes(x=thresh,y=rate,color=method_global)+geom_point()+geom_line()+scale_x_continuous("FDR Threshold")+scale_y_continuous("Proportion of Immune\nSpecific GO Modules")+facet_grid(~withng)+scale_color_brewer("Method",palette = 2,type="qual",limits=c("lma","zlm"),labels=c("Limma","MAST"))+theme_gray()
+```
+
+```{r,eval=FALSE,fig.width=8,fig.height=6}
+library(grid)
+p3 = grid.arrange(arrangeGrob(p1+theme(legend.position="none"),p2+theme(legend.position="none"),nrow=2),leg,nrow=1,widths=c(10,2))
+pdf(file="../inst/extdata/output/SuppFig_10.pdf",width=6,height=8)
+p3
+grid.draw(p3)
+grid.text(c("A","B"),x=c(0.01,0.01),y=c(0.95,0.55))
+dev.off()
+```
+
+```{r sfig10a}
+pdf(file="../inst/extdata/output/SuppFig_10_a.pdf",width=6,height=4)
+p1
+dev.off()
+```
+
+### GSEA of GO BP Modules in mDC
+
+```{r,eval=FALSE}
+library(RamiGO)
+data("c5.go.mapping")
+gsea_go = readRDS("../inst/extdata/gsea_result_mDC.rds")
+gomap = melt(sapply(gsea_go$module,function(x)c5.go.mapping[match(x,c5.go.mapping[,1]),2]))
+gomap = cbind(rownames(gomap),gomap)
+colnames(gomap) =c("TERM","GOID")
+setDT(gomap)
+setnames(gsea_go,"module","TERM")
+gsea_go = merge(gsea_go_ids,gsea_go,by="TERM")
+setnames(gsea_go,gsub("zlm_fix","zlmfix",colnames(gsea_go)))
+gsea_go = melt(gsea_go,id=c("TERM","GOID"))
+gsea_go = cbind(gsea_go,data.table((gsea_go[,str_split_fixed(variable,"_",5)])))
+setnames(gsea_go,c("V1","V2","V3","V4","V5"),c("V1","Time","signif","Method","ng"))
+gsea_go[,V1:=NULL]
+ggplot(ldply(lapply(c(0.01,0.05,0.1),function(x){
+cbind(gsea_go[signif%in%"FDR",.(sum(GOID%in%offspring&value<substitute(eval(x)))/sum(value<substitute(eval(x) ))),.(Method,ng)],thresh=x)[,ng:=factor(ng,levels=c("","ng"),labels=c("No CDR","With CDR"))]
+})))+aes(x=thresh,y=V1,color=Method)+facet_wrap(~ng)+geom_line()+geom_point()+scale_x_continuous("FDR Threshold")+scale_color_brewer("Method",palette = 2,type="qual",limits=c("limma","zlm","zlmfix"),labels=c("Limma","MAST","MAST (fixed threshold)"))+scale_y_continuous("Proportion of Enriched\nImmune Specific GO BP Modules")
+```
+
+### GSEA of GO BP Modules Enriched in MAIT
+
+```{r,eval=FALSE}
+gsea_go = readRDS("../inst/extdata/gsea_result.rds")
+gomap = melt(sapply(gsea_go$module,function(x)c5.go.mapping[match(x,c5.go.mapping[,1]),2]))
+gomap = cbind(rownames(gomap),gomap)
+colnames(gomap) =c("TERM","GOID")
+setDT(gomap)
+setnames(gsea_go,"module","TERM")
+gsea_go = merge(gsea_go_ids,gsea_go,by="TERM")
+setnames(gsea_go,gsub("zlm_fix","zlmfix",colnames(gsea_go)))
+gsea_go = melt(gsea_go,id=c("TERM","GOID"))
+gsea_go = cbind(gsea_go,data.table((gsea_go[,str_split_fixed(variable,"_",3)])))
+setnames(gsea_go,c("V1","V2","V3"),c("var","Method","ng"))
+ggplot(ldply(lapply(c(0.01,0.05,0.1),function(x){
+cbind(gsea_go[var%in%"FDR",.({foo=sum(GOID%in%offspring&value<substitute(eval(x)))/sum(value<substitute(eval(x) ));ifelse(is.nan(foo),0,foo)}),.(Method,ng)],thresh=x)[,ng:=factor(ng,levels=c("","ng"),labels=c("No CDR","With CDR"))]
+})))+aes(x=thresh,y=V1,color=Method)+facet_wrap(~ng)+geom_line(alpha=0.7)+geom_point(alpha=0.7)+scale_x_continuous("FDR Threshold")+scale_color_brewer("Method",palette = 2,type="qual")+scale_y_continuous("Proportion of Enriched Immune\nSpecific GO BP Modules")
+```
+
+# Simulation study
+
+```{r load_library}
+library(abind)
+library(arm)
+library(data.table)
+library(ggplot2)
+library(grid)
+library(devtools)
+#install_github("RGlab/MAST")
+library(MAST)
+library(mvtnorm)
+library(GSEABase)
+library(limma)
+library(MCMCpack)
+library(pheatmap)
+library(GGally)
+library(RColorBrewer)
+library(reshape2)
+library(AnnotationDbi)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+```
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set( fig.width = 14, 
+                       echo      = FALSE, 
+                       warning   = FALSE, 
+                       message   = FALSE )
+```
+
+```{r define_constants,echo=FALSE, message=FALSE}
+min_gene_in_module <- 5
+FCTHRESHOLD        <- log2(1.5)
+nrep           <- 10
+options("mc.cores"=detectCores())
+```
+## For portability, all the time consuming steps are not evaluated.
+## Please set ALL the eval flag in the knitr chunks to TRUE before running the code.
+
+```{r data_loading, echo=FALSE, message=FALSE, warning=FALSE, eval=FALSE }
+set.seed(123123)
+
+#install.packages("MASTDataPackage",repos="http://gull.fhcrc.org")
+library(MASTDataPackage)
+data(MASTDataPackage)
+sca_mait_original <- sca_mait
+sca_mait          <- subset(sca_mait,nGeneOn>4000)
+eid               <- select(TxDb.Hsapiens.UCSC.hg19.knownGene,
+                           keys=fData(sca_mait)$entrez,
+                           keytype="GENEID",
+                           columns=c("GENEID","TXNAME"))
+ueid              <- unique(na.omit(eid)$GENEID)
+sca_mait          <- sca_mait[,fData(sca_mait)$entrez%in%ueid]
+
+MAST:::layer(sca_mait)   <- "tpm"
+sca_mait_filtered <- sca_mait
+unlogged          <- 2^exprs(sca_mait)-1
+tt <- thresholdSCRNACountMatrix( unlogged              ,
+                                 nbins          = 20   , 
+                                 min_per_bin    = 30   ,
+                                 return_log     = TRUE
+                               )
+#par(mfrow=c(6,5))
+#plot(tt)
+
+fd_filt                   <- fData(sca_mait)
+fd_filt$cutpoint          <- tt$cutpoint[as.character(tt$bin)]
+
+esetAll<-abind(sca_mait@.Data, atpm=tt$counts_threshold, along=3)
+
+sca_mait_filtered<-FromMatrix('SingleCellAssay',esetAll,
+                                cData(sca_mait_filtered),fd_filt)
+dimnames(sca_mait_filtered)[[3]]<-dimnames(esetAll)[[3]]
+MAST:::layer(sca_mait_filtered)<-"atpm"
+sca_mait_filtered         <- sca_mait_filtered[,freq(sca_mait_filtered)>0.2]
+sca                       <- sca_mait_filtered
+MAST:::layer(sca)<-"atpm"
+```
+
+
+### fit ZLM
+
+```{r fitzlm, eval=FALSE, echo=FALSE}
+MAST:::layer(sca)  <- 'atpm'
+# without ngeneson
+cData(sca)$condition<-factor(cData(sca)$condition,levels=c("Unstim","Stim"))
+zlm_cond <- zlm.SingleCellAssay( ~ condition , sca,  
+                                 method='bayesglm', ebayes = TRUE, 
+                                 ebayesControl =list(method = "MLE", model = "H1") ,  
+                                 hook=deviance_residuals_hook )
+lrt_cond  <- lrTest( zlm_cond,CoefficientHypothesis("conditionStim"))
+wald_cond <- waldTest(zlm_cond,CoefficientHypothesis("conditionStim"))
+logFC_no  <- getLogFC(zlm_cond,c(1,0),c(1,1))
+zlm_resid <- do.call(rbind,zlm_cond@hookOut)
+
+# with ngeneson
+zlm_cond_sh  <- zlm.SingleCellAssay( ~ condition + cngeneson, sca,  
+                                     method='bayesglm', ebayes = TRUE, 
+                                     ebayesControl =list(method = "MLE", model = "H1"), 
+                                     hook=deviance_residuals_hook )
+lrt_cond_sh  <- lrTest(  zlm_cond_sh,CoefficientHypothesis("conditionStim"))
+wald_cond_sh <- waldTest(zlm_cond_sh,CoefficientHypothesis("conditionStim"))
+logFC_mait   <- getLogFC(zlm_cond_sh,c(1,0,0),c(1,1,0))
+zlm_resid_ng <- do.call(rbind,zlm_cond_sh@hookOut)
+
+res_gene          <- data.table(melt(lrt_cond))
+res_gene$primerid <- as.character(res_gene$primerid)
+res_gene          <- merge(res_gene, fData(sca), by="primerid")
+res_gene_hurdle   <- res_gene[metric=="Pr(>Chisq)" & test.type=="hurdle"]
+res_gene_hurdle   <- res_gene_hurdle[,adj:=p.adjust(value,"fdr")]
+lfc               <- getLogFC(zlm_cond)[contrast=="conditionStim"]
+setkey(lfc,primerid)
+setkey(res_gene_hurdle,primerid)
+res_gene_hurdle   <- merge(lfc,res_gene_hurdle)
+
+res_gene_ng       <- data.table(melt(lrt_cond_sh))
+res_gene_ng$primerid <- as.character(res_gene_ng$primerid)
+res_gene_ng       <- merge(res_gene_ng, fData(sca), by="primerid")
+res_gene_ng_hurdle<- res_gene_ng[metric=="Pr(>Chisq)" & test.type=="hurdle"]
+res_gene_ng_hurdle<-res_gene_ng_hurdle[,adj:=p.adjust(value,"fdr")]
+lfc_ng               <- getLogFC(zlm_cond_sh)[contrast=="conditionStim"]
+setkey(lfc_ng,primerid)
+setkey(res_gene_ng_hurdle,primerid)
+res_gene_ng_hurdle<-merge(lfc_ng,res_gene_ng_hurdle)
+
+saveRDS( zlm_cond          ,    file = "zlm_cond.rds"   )
+saveRDS( zlm_cond_sh       ,    file = "zlm_cond_sh.rds"   )
+saveRDS( res_gene_hurdle   ,    file = "res_gene_hurdle.rds"   )
+saveRDS( res_gene_ng_hurdle,    file = "res_gene_ng_hurdle.rds"   )
+
+MAST:::layer(sca)  <- 'tpm'
+```
+
+# read fit ZLM result
+```{r read_saved_data}
+ zlm_cond          <-readRDS( file = "../inst/extdata/zlm_cond.rds"   )
+ zlm_cond_sh       <-readRDS( file = "../inst/extdata/zlm_cond_sh.rds"   )
+ res_gene_hurdle   <-readRDS( file = "../inst/extdata/res_gene_hurdle.rds"   )
+ res_gene_ng_hurdle<-readRDS( file = "../inst/extdata/res_gene_ng_hurdle.rds"   )
+```
+
+###  The estimated parameters in MAIT
+
+```{r mait_parameters, fig.width=12, fig.height=20  }
+genes_signif<- res_gene_ng_hurdle[adj<0.01&abs(logFC)>FCTHRESHOLD][order(logFC)]#[1:100]
+genes_notsig<- res_gene_ng_hurdle[adj>0.5 &abs(logFC)<FCTHRESHOLD][order(logFC)]#[1:900]
+
+cc_sig_ng   <- coef(zlm_cond_sh,"C")[c(genes_signif$primerid,genes_notsig$primerid),]
+cd_sig_ng   <- coef(zlm_cond_sh,"D")[c(genes_signif$primerid,genes_notsig$primerid),]
+
+par(mfrow=c(6,2))
+hist(cc_sig_ng[genes_signif$primerid,   "(Intercept)"]  ,main="signif  cont base")
+hist(cc_sig_ng[genes_notsig$primerid,   "(Intercept)"]  ,main="not sig cont base")
+hist(cc_sig_ng[genes_signif$primerid,   "conditionStim"],main="signif  cont stim")
+hist(cc_sig_ng[genes_notsig$primerid,   "conditionStim"],main="not sig cont stim")
+hist(cc_sig_ng[genes_signif$primerid,   "cngeneson"]    ,main="signif  cont cdr ")
+hist(cc_sig_ng[genes_notsig$primerid,   "cngeneson"]    ,main="not sig cont cdr ")
+hist(cd_sig_ng[genes_signif$primerid,   "(Intercept)"]  ,main="signif  disc base")
+hist(cd_sig_ng[genes_notsig$primerid,   "(Intercept)"]  ,main="not sig disc base")
+hist(cd_sig_ng[genes_signif$primerid,   "conditionStim"],main="signif  disc stim")
+hist(cd_sig_ng[genes_notsig$primerid,   "conditionStim"],main="not sig disc stim")
+hist(cd_sig_ng[genes_signif$primerid,   "cngeneson"]    ,main="signif  disc cdr ")
+hist(cd_sig_ng[genes_notsig$primerid,   "cngeneson"]    ,main="not sig disc cdr ")
+```
+
+###  The estimated stimulation and cdr coefficient in MAIT
+
+```{r mait_cor, fig.width=14, fig.height=7  }
+par(mfrow=c(1,2))
+plot(zlm_cond_sh@coefD[,"conditionStim"],zlm_cond_sh@coefD[,"cngeneson"], main="D", xlab="stim",ylab="CDR")
+plot(zlm_cond_sh@coefC[,"conditionStim"],zlm_cond_sh@coefC[,"cngeneson"], main="C", xlab="stim",ylab="CDR")
+```
+
+```{r mait_pair, fig.width=14, fig.height=7 }
+par(mfrow=c(1,2))
+pairs(data.frame(zlm_cond_sh@coefD[genes_signif$primerid,"conditionStim"],zlm_cond_sh@coefD[genes_signif$primerid,"cngeneson"],zlm_cond_sh@coefC[genes_signif$primerid,"conditionStim"],zlm_cond_sh@coefC[genes_signif$primerid,"cngeneson"]))
+
+par(mfrow=c(1,2))
+pairs(data.frame(zlm_cond_sh@coefD[genes_notsig$primerid,"conditionStim"],zlm_cond_sh@coefD[genes_notsig$primerid,"cngeneson"],zlm_cond_sh@coefC[genes_notsig$primerid,"conditionStim"],zlm_cond_sh@coefC[genes_notsig$primerid,"cngeneson"]))
+```
+
+
+```{r set_parameters,eval=FALSE,error=TRUE}
+N  <- 200    # number of samples
+N0 <- 100    # number of samples in group 0
+N1 <- 100    # number of samples in group 1
+P  <- 2500   # number of features
+P0 <- 100    # number of DE features
+P1 <- 2400   # number of not DE features
+
+mait_cdr   <- rowMeans(exprs(sca)[,c(genes_signif$primerid,genes_notsig$primerid)]>0)
+mait_cdr_us<- mait_cdr[cData(sca)$condition=="Unstim"]
+mait_cdr_st<- mait_cdr[cData(sca)$condition=="Stim"]
+
+ncdr    <- 3
+mb_u    <- c(0.2,0.3,0.4)
+sb_u    <- 20
+mb_s    <- c(0.6,0.5,0.4)
+sb_s    <- 20
+rho     <- c(0,0.3,0.5,0.8)
+nro     <- length(rho)
+s       <- c(rep(0,N0),rep(1,N1))
+
+th_c    <- 5
+om_c    <- 2
+
+th_d    <- 0
+om_d    <- 1
+
+nu_s_c  <- 1
+nu_u_c  <- 0
+tau_s_c <- 2
+tau_u_c <- 1
+
+nu_s_d  <- 3
+nu_u_d  <- 0
+tau_s_d <- 1 
+tau_u_d <- 0.3 
+
+rep_list_no      <-vector("list",nrep)
+rep_list_cd      <-vector("list",nrep)
+rep_list_limma_no<-vector("list",nrep)
+rep_list_limma_cd<-vector("list",nrep)
+
+for(ri in 1:nrep){
+  cat("replication: ",ri,"\n")
+  cdr_list <-vector("list",ncdr)
+  names(cdr_list)<- paste("x",mb_u,mb_s,sep="_")
+  for(i in 1:3){
+    cdr_list[[i]]<-c(rbeta(N0,mb_u[i]*sb_u,(1-mb_u[i])*sb_u),rbeta(N1,mb_s[i]*sb_s,(1-mb_s[i])*sb_s))
+  }
+
+  sigma_d<- runif(P,0,1)
+  sdnosh <- log(sqrt(zlm_cond_sh@dispersionNoshrink[c(genes_signif$primerid,genes_notsig$primerid),"C"]))
+
+  varnosh <- zlm_cond_sh@dispersionNoshrink[c(genes_signif$primerid,genes_notsig$primerid),"C"]
+  a0=(zlm_cond_sh@priorDOF)/2
+  b0=(zlm_cond_sh@priorVar)*a0
+  # pdf("dispersion.pdf",width=12,heigh=4)
+  #   par(mfrow=c(1,3))
+  #   x<-seq(0,20,by=1)
+  #   hist(varnosh,probability=T)
+  #   curve(dgamma(x,shape=3,rate=0.7),add=TRUE,col="blue")
+  #   curve(dinvgamma(x,shape=a0,b0),add=TRUE,col="red")
+  #   hist(1/rgamma(100,shape=a0,b0),probability=T,main="zlm estimate")
+  #   hist(rgamma(100,shape=3,rate=0.7),probability=T,main="gamma(3,0.7)")
+  # dev.off()
+
+  sigma_c <-sqrt( 1/rgamma(P,shape=a0,rate=b0))
+  mm_d    <- c( nu_s_d, nu_u_d)[c(rep(1,P0),rep(2,P1))]
+  tt_d    <- c(tau_s_d,tau_u_d)[c(rep(1,P0),rep(2,P1))]
+  mm_c    <- c( nu_s_c, nu_u_c)[c(rep(1,P0),rep(2,P1))]
+  tt_c    <- c(tau_s_c,tau_u_c)[c(rep(1,P0),rep(2,P1))]
+
+  coefs_c<- array(NA,c(P,2,nro))
+  coefs_d<- array(NA,c(P,2,nro))
+  dimnames(coefs_c)<-list(NULL,c("Stim","CDR"),paste("rho",rho,sep="_"))
+  dimnames(coefs_d)<-list(NULL,c("Stim","CDR"),paste("rho",rho,sep="_"))
+  for( j in 1:nro){
+    Rd <- matrix(c(1,-rho[j],-rho[j],1),2,2)
+    Rc <- matrix(c(1,-rho[j],-rho[j],1),2,2)
+    for(k in 1:P){
+      Dc<-diag(c(tt_c[k],10))
+      Dd<-diag(c(tt_d[k],10))
+      coefs_d[k,,j]=rmvnorm(1,c(mm_d[k],0),Dd%*%Rd%*%Dd)
+      coefs_c[k,,j]=rmvnorm(1,c(mm_c[k],0),Dc%*%Rc%*%Dc)
+    }
+  }
+
+  stim_d  <- coefs_d[,1,1]
+  stim_c  <- coefs_c[,1,1]
+  mu_du   <- rnorm( P, th_d, om_d )
+  mu_ds   <- (mu_du + stim_d)
+  temp    <- mu_du[81:100]
+  mu_du[81:100]<- mu_ds[81:100]
+  mu_ds[81:100]<- temp
+  mu_c    <- rnorm( P, th_c, om_c )
+  mu_mat  <- matrix( mu_c, nrow=P, ncol=N )
+  stim_mat   <- t(t(matrix(stim_c,nrow=P,ncol=N))*s)
+  mustim_mat <- mu_mat+stim_mat
+  temp2                     <- mustim_mat[81:100,1:N0 ]
+  mustim_mat[81:100,1:N0 ]  <- mustim_mat[81:100,(N0+1):(N0+N1)]
+  mustim_mat[81:100,(N0+1):(N0+N1)]<- temp2
+  cid    <- matrix(1,P,N)
+
+  disc   <- matrix(NA,P,N)
+  dt     <- matrix(NA,P,N)
+  colnames(dt)<-paste("cell_",1:N,sep="")
+
+  for(i in 1:P){
+    disc[i,]    <- c(rbinom( N0, 1, cid[i,     1:N0     ]*invlogit( mu_du[i] ) ) ,
+                     rbinom( N1, 1, cid[i,(N0+1):(N0+N1)]*invlogit( mu_ds[i] ) ) )
+  }
+  for(i in 1:N){
+      dt[,i]    <- disc[,i] * rnorm( P, mustim_mat[,i] , sigma_c ) #sigma_c )
+  }
+
+  dt_cd=data.table(mb_u=c(NA,rep(mb_u,nro)),mb_s=c(NA,rep(mb_s,nro)),
+            rho=c(NA,rep(rho,each=ncdr)),dt_idx=seq(1,nro*ncdr+1,by=1))
+  dt_cd        <- dt_cd[1:4,] # running conditions with no correlation in stimulation and CDR coef
+  nsim         <- nrow(dt_cd)
+  dt_list      <- vector("list",nrow(dt_cd))
+  dt_list[[1]] <- dt
+  for(icc in 2:nsim){
+    cat("sim: ",icc,"\n")
+    te=matrix(NA,P,N)
+    colnames(te)<-paste("cell_",1:N,sep="")
+    dt_list[[dt_cd[icc,]$dt_idx]]=te
+    disc_cd<- matrix(NA,P,N)
+    cdr    <- cdr_list[[paste("x",dt_cd$mb_u[icc],dt_cd$mb_s[icc],sep="_")]]
+    #for(j in 1:nro){
+      rn           <- paste("rho",dt_cd$rho[icc],sep="_")
+    stim_d       <- coefs_d[,1,rn]
+    stim_c       <- coefs_c[,1,rn]
+    beta_cdr_d   <- coefs_d[,2,rn]
+    beta_cdr_c   <- coefs_c[,2,rn]
+    mu_du        <- rnorm( P, th_d, om_d )
+    mu_ds        <- (mu_du + stim_d)
+    temp         <- mu_du[81:100]
+    mu_du[81:100]<- mu_ds[81:100]
+    mu_ds[81:100]<- temp
+    mu_c         <- rnorm( P, th_c, om_c )
+    mu_mat       <- matrix( mu_c, nrow=P, ncol=N )
+    stim_mat     <- t(t(matrix(stim_c,nrow=P,ncol=N))*s)
+    mustim_mat   <- mu_mat+stim_mat
+    temp2                     <- mustim_mat[81:100,1:N0 ]
+    mustim_mat[81:100,1:N0 ]  <- mustim_mat[81:100,(N0+1):(N0+N1)]
+    mustim_mat[81:100,(N0+1):(N0+N1)]<- temp2
+    for(i in 1:P){
+      disc_cd[i,] <- c(rbinom( N0, 1, cid[i,1:N0 ]*invlogit( mu_du[i] + beta_cdr_d[i]*cdr[1:N0] ) ) ,
+                       rbinom( N1, 1, cid[i,(N0+1):(N0+N1)]*invlogit( mu_ds[i] + beta_cdr_d[i]*cdr[(N0+1):(N0+N1)]) ) )
+    }
+    for(i in 1:N){
+        dt_list[[dt_cd[icc,]$dt_idx]][,i] <- disc_cd[,i] * rnorm( P, mustim_mat[,i]+beta_cdr_c*cdr[i], sigma_c ) 
+
+    }
+    #}
+  }
+
+  zlm_sim_no_rho   <- vector( "list", nsim )  
+  lrt_sim_no_rho   <- vector( "list", nsim )
+  lfc_sim_no_rho   <- vector( "list", nsim )
+  zlm_sim_cd_rho   <- vector( "list", nsim )
+  lrt_sim_cd_rho   <- vector( "list", nsim )
+  lfc_sim_cd_rho   <- vector( "list", nsim )
+  fdr_no_rho       <- vector( "list", nsim ) 
+  fdr_cd_rho       <- vector( "list", nsim ) 
+  fdr_no_fc_rho    <- vector( "list", nsim ) 
+  fdr_cd_fc_rho    <- vector( "list", nsim ) 
+  limma_no_rho     <- vector( "list", nsim ) 
+  limma_cd_rho     <- vector( "list", nsim ) 
+  reslimma_no_rho  <- vector( "list", nsim ) 
+  reslimma_cd_rho  <- vector( "list", nsim ) 
+
+  neglog10alpha    <- rev(seq(0,500,length.out=1000))
+  alpha            <- 10^(-neglog10alpha)
+  truth            <- rep(c(0,1),c(P0,P1))
+  truth_mat        <- matrix(truth,P,P)
+  for(j in 1:nsim){
+    cat("creating sca object\n")
+    fdat    <- data.frame(primerid=1:P, entrez=1:P, symbolid=1:P, stringsAsFactors=FALSE)
+    esetAll <- abind(tpm=t(dt_list[[j]]), rev.along=0)
+    cdr_est <- colMeans(dt_list[[j]]>0)
+    if( j >= 2 ) cdr_est <- cdr_list[[paste("x",dt_cd$mb_u[j],dt_cd$mb_s[j],sep="_")]]
+    cdat    <- data.frame(wellKey=colnames(dt_list[[j]]), condition=factor(s), 
+                ncells=1, ngeneson=cdr_est, cngeneson=cdr_est - mean(cdr_est), 
+                stringsAsFactors=FALSE)
+    rownames(cdat)<-colnames(dt_list[[j]])
+    sca_sim     <- FromMatrix('SingleCellAssay', esetAll, cdat, fdat)
+    name_vec    <- (1:P)  
+    true_count  <- c(P0,P1)
+    cat("fitting zlm\n")
+    zlm_sim_no_rho[[j]]  <- zlm.SingleCellAssay( ~ condition , sca_sim,  
+                                         method='bayesglm', ebayes = TRUE, 
+                                         ebayesControl =list(method = "MLE", model = "H1"), 
+                                         hook=deviance_residuals_hook )
+    lrt_sim_no_rho[[j]]  <- lrTest(  zlm_sim_no_rho[[j]],CoefficientHypothesis("condition1"))
+    lfc_sim_no_rho[[j]]  <- getLogFC(zlm_sim_no_rho[[j]],c(1,0),c(1,1))
+
+    zlm_sim_cd_rho[[j]]  <- zlm.SingleCellAssay( ~ condition + cngeneson, sca_sim,  
+                                         method='bayesglm', ebayes = TRUE, 
+                                         ebayesControl =list(method = "MLE", model = "H1"), 
+                                         hook=deviance_residuals_hook )
+    lrt_sim_cd_rho[[j]]  <- lrTest(  zlm_sim_cd_rho[[j]],CoefficientHypothesis("condition1"))
+    lfc_sim_cd_rho[[j]]  <- getLogFC(zlm_sim_cd_rho[[j]],c(1,0,0),c(1,1,0))
+    #saveRDS( zlm_sim_no_rho[[j]]          ,    file = paste("zlm_no",ri,j,".rds",sep="_")   )
+    #saveRDS( zlm_sim_cd_rho[[j]]          ,    file = paste("zlm_cd",ri,j,".rds",sep="_")   )
+
+    fdr_no_rho[[j]]    <-sapply(neglog10alpha,function(x)by(-log10(lrt_sim_no_rho[[j]][,"hurdle","Pr(>Chisq)"])>x,truth,sum)/true_count)
+    fdr_cd_rho[[j]]    <-sapply(neglog10alpha,function(x)by(-log10(lrt_sim_cd_rho[[j]][,"hurdle","Pr(>Chisq)"])>x,truth,sum)/true_count)
+    dt_pos             <- t(exprs(sca_sim))#dt_list[[j]]
+    tpm                <- 2^dt_pos
+    count_matrix       <- round( t((t(tpm)/colSums(tpm))*1000000))
+    rownames(count_matrix)<-name_vec
+
+    cat("fitting limma\n")
+    x                <- count_matrix
+    new_set          <- ExpressionSet( assayData = as.matrix(x)+1 )
+
+      # without ngeneson
+      design           <- model.matrix(~ condition, data=cData(sca_sim))
+      colnames(design) <- make.names(colnames(design))
+      cont_matrix      <- makeContrasts( "condition1",
+                                          levels = design)
+      voom.data        <- voom( new_set, design = design )
+      voom.data$genes  <- rownames(x)
+      voom.fitlimma    <- lmFit( voom.data, design = design )
+      voom.fitbayes    <- contrasts.fit(voom.fitlimma,cont_matrix)
+      voom.fitbayes    <- eBayes(voom.fitbayes)
+      voom.pvalues     <- voom.fitbayes$p.value
+      reslimma_no_rho[[j]] <- topTable( voom.fitbayes, adjust.method="fdr", number=Inf, sort.by="none" )
+
+      # with ngeneson
+      design_ng           <- model.matrix(~ condition + cngeneson, data=cData(sca_sim))
+      colnames(design_ng) <- make.names( colnames(design_ng) )
+      cont_matrix_ng      <- makeContrasts( "condition1",
+                                             levels = design_ng )
+      voom.data_ng        <- voom( new_set, design = design_ng )
+      voom.data_ng$genes  <- rownames(x)
+      voom.fitlimma_ng    <- lmFit( voom.data_ng, design = design_ng )
+      voom.fitbayes_ng    <- contrasts.fit(voom.fitlimma_ng, cont_matrix_ng)
+      voom.fitbayes_ng    <- eBayes(voom.fitbayes_ng)
+      reslimma_cd_rho[[j]]<- topTable(voom.fitbayes_ng, adjust.method="fdr", number=Inf, sort.by="none" )
+
+    limma_no_rho[[j]]   <- sapply( neglog10alpha, function(x) by(-log10(reslimma_no_rho[[j]]$P.Value) > x, truth, sum )/true_count )
+    limma_cd_rho[[j]]   <- sapply( neglog10alpha, function(x) by(-log10(reslimma_cd_rho[[j]]$P.Value) > x, truth, sum )/true_count )
+  }
+  rep_list_no[[ri]]      <- fdr_no_rho
+  rep_list_cd[[ri]]      <- fdr_cd_rho
+  rep_list_limma_no[[ri]]<- limma_no_rho
+  rep_list_limma_cd[[ri]]<- limma_cd_rho
+}
+
+saveRDS( rep_list_no,          file ="rep_list_no.rds"  )
+saveRDS( rep_list_cd,          file ="rep_list_cd.rds"  )
+saveRDS( rep_list_limma_no,    file ="rep_list_limma_no.rds"  )
+saveRDS( rep_list_limma_cd,    file ="rep_list_limma_cd.rds"  )
+
+# dtcdr<-melt(data.frame(abind(cdr_list,along=2),stimulation=rep(c("Unstim","Stim"),each=N0)))
+# dtcdr$variable<-factor(dtcdr$variable,labels=c("strong confounding", "moderate confounding", "no confounding"))
+# pdf("cdr_confounding.pdf",width=12,heigh=4)
+# ggplot(dtcdr)+geom_density()+aes(x=value,color=stimulation)+facet_grid(.~variable)+xlab("CDR") + scale_colour_brewer(palette="Set1")
+# dev.off()
+```
+
+```{r load_result}
+
+rep_list_no        <- readRDS( file = "../inst/extdata/rep_list_no.rds") 
+rep_list_cd        <- readRDS( file = "../inst/extdata/rep_list_cd.rds" ) 
+rep_list_limma_no  <- readRDS( file = "../inst/extdata/rep_list_limma_no.rds" ) 
+rep_list_limma_cd  <- readRDS( file = "../inst/extdata/rep_list_limma_cd.rds" ) 
+
+# rep_list_no        <- readRDS(file ="rep_list_no.rds"  )
+# rep_list_cd        <- readRDS(file ="rep_list_cd.rds"  )
+# rep_list_limma_no  <- readRDS(file ="rep_list_limma_no.rds"  )
+# rep_list_limma_cd  <- readRDS(file ="rep_list_limma_cd.rds"  )
+
+```
+###  ROC 
+
+```{r plot_roc, fig.width=15, fig.height=10}
+conditions=c("no CDR in TRUTH", "strong confounding", "moderate confounding", "no confounding")
+dttmp=NULL
+for(j in 1:4){
+dttmp=rbind(dttmp, 
+    rbind(data.frame(t(abind(lapply(rep_list_no,function(x)x[[j]]),along=2))[,c(2,1)],
+              model="MAST no CDR", condition=conditions[j]),
+      data.frame(t(abind(lapply(rep_list_cd,function(x)x[[j]]),along=2))[,c(2,1)],
+            model="MAST with CDR", condition=conditions[j]),
+      data.frame(t(abind(lapply(rep_list_limma_no,function(x)x[[j]]),along=2))[,c(2,1)],
+            model="limma no CDR", condition=conditions[j]),
+      data.frame(t(abind(lapply(rep_list_limma_cd,function(x)x[[j]]),along=2))[,c(2,1)],
+            model="limma with CDR", condition=conditions[j])
+      )
+    )
+}
+names(dttmp)[1:2]<-c("FP","TP")
+dttmp$condition = factor(dttmp$condition)
+#pdf("simulation_ROC_with_without_CDR.pdf",width=16,height=4)
+ggplot(dttmp)+aes(x=FP,y=TP,group=model,color=model)+facet_grid(.~condition)+geom_abline(intercept=0,slope=1,linetype="dotted")+ stat_quantile(method = "rqss",quantiles = c(0.05, 0.95),linetype="dashed", lambda = 1)+ stat_quantile(method = "rqss",quantiles = c(0.5), lambda = 1)+ylim(0,1)+xlim(0,1)
+#dev.off()
+
+```
