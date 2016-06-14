@@ -1,7 +1,5 @@
 #'Processed single cell RNA seqdata for our single cell RNA seq paper from our MAIT study.
 #'
-#'This data set contains the processed data for our fake 
-#'assay, with 100 replicated measurements for each of four subjects.
 #'@docType data
 #'@format This is a SingleCellAssay object
 #'\describe{
@@ -38,12 +36,10 @@ NULL
 
 # library
 suppressPackageStartupMessages({
-	require(MAST)
 	require(plyr)
 	require(data.table)
 	require(biomaRt)
 	require(stringr)
-	require(reshape2)
 	require(org.Hs.eg.db)
 	require(Biobase)
 	require(abind)
@@ -70,15 +66,15 @@ rsem.dir <- "/shared/silo_researcher/Gottardo_R/jingyuan_working/MAIT/processedD
 res.files  <- list.files(rsem.dir, pattern = "*.genes.results$", full = T, recursive = T)
 res        <- lapply(res.files, function(x) fread(x))
 names(res) <- gsub(".genes.results", "", basename(res.files))
-res_long   <- ldply(res)
+res_long   <- rbindlist(res, idcol='.id')
 setnames(res_long, 3, "transcript")
 count     <- dcast(res_long, transcript ~ .id, value.var="expected_count")
-count_mat <- as.matrix(count[ ,-1])
+count_mat <- as.matrix(count[ ,-1, with=FALSE])
 tpm        <- dcast(res_long, transcript ~ .id, value.var="TPM")
-tpm_mat    <- as.matrix(tpm[ ,-1])
+tpm_mat    <- as.matrix(tpm[ ,-1, with=FALSE])
 
-len_mat            <- dcast(res_long, transcript ~ .id, value.var="length")[,-1]
-effective_len_mat  <- dcast(res_long, transcript ~ .id, value.var="effective_length")[,-1]
+len_mat            <- dcast(res_long, transcript ~ .id, value.var="length")[,-1, with=FALSE]
+effective_len_mat  <- dcast(res_long, transcript ~ .id, value.var="effective_length")[,-1, with=FALSE]
 
 ## BULK
 bulk_rsem_dir <- "/shared/silo_researcher/Gottardo_R/jingyuan_working/MAIT_bulk/RSEM"
@@ -86,26 +82,26 @@ bulk_rsem_dir <- "/shared/silo_researcher/Gottardo_R/jingyuan_working/MAIT_bulk/
 res.files.bulk  <- list.files(bulk_rsem_dir, pattern = "*.genes.results$", full = T, recursive = T)
 res.bulk        <- lapply(res.files.bulk, function(x) fread(x))
 names(res.bulk) <- gsub(".genes.results", "", basename(res.files.bulk))
-res.bulk_long   <- ldply(res.bulk)
+res.bulk_long   <- rbindlist(res.bulk, idcol='.id')
 setnames(res.bulk_long, 3, "transcript")
 count_bulk      <- dcast(res.bulk_long, transcript ~ .id, value.var="expected_count")
-count_mat_bulk    <- as.matrix(count_bulk[ ,-1])
+count_mat_bulk    <- as.matrix(count_bulk[ ,-1, with=FALSE])
 tpm_bulk        <- dcast(res.bulk_long, transcript ~ .id, value.var="TPM")
-tpm_mat_bulk    <- as.matrix(tpm_bulk[ ,-1])
+tpm_mat_bulk    <- as.matrix(tpm_bulk[ ,-1, with=FALSE])
 
-len_bulk_mat        <- dcast(res.bulk_long, transcript ~ .id, value.var="length")[,-1]
-effective_len_bulk_mat        <- dcast(res.bulk_long, transcript ~ .id, value.var="effective_length")[,-1]
+len_bulk_mat        <- dcast(res.bulk_long, transcript ~ .id, value.var="length")[,-1, with=FALSE]
+effective_len_bulk_mat        <- dcast(res.bulk_long, transcript ~ .id, value.var="effective_length")[,-1, with=FALSE]
 
 # get symbolid
 idsymbol      <-read.delim("/shared/silo_researcher/Gottardo_R/SingleCellRNA_Data/SCRAMDataPackage/inst/extdata/IdToSymbol",stringsAsFactors=FALSE)
 idsymdb       <- data.table(idsymbol)
 setnames(idsymdb ,c("UCKGID","SYMBOL"))
 setkey(idsymdb ,"UCKGID")
-tranid         <- sapply( strsplit( tpm[ ,1], ","), function(x) x[1] ) # only need the first transcript
+tranid         <- str_split_fixed( tpm[ ,transcript], ",", 3)[,1]
 idsymtab       <- data.frame( idsymdb[tranid,])
 stopifnot( all(idsymtab[,1]==tranid)) # double check
 
-fd = data.frame(symbolid= idsymtab$SYMBOL,transcrpitid=tpm[ ,1],stringsAsFactors=FALSE)
+fd = data.frame(symbolid= idsymtab$SYMBOL,transcrpitid=tpm[ ,transcript],stringsAsFactors=FALSE)
 
 # filter
 #count_mat  <- as.matrix(count[ ,-1])
@@ -164,9 +160,11 @@ dimnames(esetAll)[2]      <- list(primerid=entrez.order$primerid)
 #dimnames(count_mat_filt)[1] <- list(primerid=entrez.order$primerid)
 
 fdat <- data.frame(primerid=entrez.order$primerid, entrez=entrez.order$gene_id, symbolid=entrez.order$symbol, stringsAsFactors=FALSE)
-sca <- FromMatrix('SingleCellAssay', esetAll, cdat, fdat)
+sca <- MAST::FromMatrix('SingleCellAssay', esetAll, cdat, fdat)
+singleList <- list(expressionmat = exprs(sca_filt), fdat = fData(sca_filt), cdat = cData(sca_filt))
+
 dimnames(sca)[3] <- dimnames(esetAll)[3]
-sca_filt <- sca[,freq(sca)>.1]
+sca_filt <- sca[,MAST::freq(sca)>.03]
 cData(sca_filt)$ngeneson <- rowMeans(exprs(sca_filt)>0)
 cData(sca_filt)$cngeneson <- cData(sca_filt)$ngeneson- mean(cData(sca_filt)$ngeneson)
 
@@ -199,8 +197,9 @@ cData(sca_mait_bulk)$cngeneson <- cData(sca_mait_bulk)$ngeneson- mean(cData(sca_
 
 esetBULK2      <- abind(tpm=t(log2(tpm_mat_bulk+1)), count=t(log2(count_mat_bulk+1)), rev.along=0)
 dimnames(esetBULK2)[2]      <- list(primerid=entrez.order$primerid)
-
+bulkList <- list(expressionmat = t(log2(tpm_mat_bulk+1)), fdat = fdat, cdat = cdat)
 sca_mait_bulk_raw <- FromMatrix('SingleCellAssay', esetBULK2, cdat, fdat)
+
 
 # sca_mait<-addlayer(sca_mait,"count")
 
